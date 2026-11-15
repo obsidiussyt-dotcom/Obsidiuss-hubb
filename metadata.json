@@ -1,0 +1,8 @@
+{
+  "name": "OBSIDIUSS HUB",
+  "description": "Official creator community platform, resource portal, projects, downloads, and announcements for OBSIDIUSS.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

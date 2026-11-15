@@ -1,0 +1,329 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && (
+        request.auth.token.email_verified == true ||
+        request.auth.token.firebase.sign_in_provider == 'google.com'
+      );
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email == 'obsidiussyt@gmail.com' && isVerified()) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidResource(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 120 &&
+             data.description is string && data.description.size() <= 5000 &&
+             data.category is string && data.category.size() > 0 && data.category.size() <= 50 &&
+             data.version is string && data.version.size() > 0 && data.version.size() <= 30 &&
+             data.downloadUrl is string && data.downloadUrl.size() > 0 && data.downloadUrl.size() <= 1000 &&
+             data.authorId is string && data.authorId.size() > 0 && data.authorId.size() <= 128;
+    }
+
+    function isValidRating(data) {
+      return data.resourceId is string && data.resourceId.size() > 0 && data.resourceId.size() <= 128 &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.userName is string && data.userName.size() > 0 && data.userName.size() <= 100 &&
+             data.stars is number && data.stars >= 1 && data.stars <= 5 &&
+             (!('review' in data) || (data.review is string && data.review.size() <= 500)) &&
+             (!('userAvatar' in data) || (data.userAvatar is string && data.userAvatar.size() <= 200000));
+    }
+
+    function isValidProject(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 120 &&
+             data.tagline is string && data.tagline.size() > 0 && data.tagline.size() <= 200 &&
+             data.description is string && data.description.size() <= 5000 &&
+             data.category is string && data.category.size() > 0 && data.category.size() <= 50;
+    }
+
+    function isValidAnnouncement(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 150 &&
+             data.content is string && data.content.size() > 0 && data.content.size() <= 10000 &&
+             data.category is string && data.category.size() > 0 && data.category.size() <= 50 &&
+             data.authorId is string && data.authorId.size() > 0 && data.authorId.size() <= 128;
+    }
+
+    function isValidDiscussion(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 150 &&
+             data.content is string && data.content.size() > 0 && data.content.size() <= 6000 &&
+             data.category is string && data.category.size() > 0 && data.category.size() <= 50 &&
+             data.authorId is string && data.authorId.size() > 0 && data.authorId.size() <= 128 &&
+             data.authorName is string && data.authorName.size() > 0 && data.authorName.size() <= 100;
+    }
+
+    function isValidComment(data) {
+      return data.discussionId is string && data.discussionId.size() > 0 && data.discussionId.size() <= 128 &&
+             data.authorId is string && data.authorId.size() > 0 && data.authorId.size() <= 128 &&
+             data.authorName is string && data.authorName.size() > 0 && data.authorName.size() <= 100 &&
+             data.content is string && data.content.size() > 0 && data.content.size() <= 2000;
+    }
+
+    function isValidCategory(data) {
+      return data.slug is string && data.slug.size() > 0 && data.slug.size() <= 50 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 80;
+    }
+
+    function isValidUserProfile(data) {
+      return data.displayName is string && data.displayName.size() > 0 && data.displayName.size() <= 80 &&
+             data.role is string && data.role.size() > 0 && data.role.size() <= 40 &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 200000)) &&
+             (!('bio' in data) || (data.bio is string && data.bio.size() <= 600));
+    }
+
+    function isValidFeedback(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 80 &&
+             data.email is string && data.email.size() > 0 && data.email.size() <= 120 &&
+             data.subject is string && data.subject.size() > 0 && data.subject.size() <= 150 &&
+             data.message is string && data.message.size() > 0 && data.message.size() <= 3000;
+    }
+
+    function isValidReport(data) {
+      return data.targetType is string && data.targetType.size() > 0 && data.targetType.size() <= 40 &&
+             data.targetId is string && data.targetId.size() > 0 && data.targetId.size() <= 128 &&
+             data.reason is string && data.reason.size() > 0 && data.reason.size() <= 100 &&
+             data.reporterId is string && data.reporterId.size() > 0 && data.reporterId.size() <= 128;
+    }
+
+    // 1. Resources collection
+    match /resources/{resourceId} {
+      allow list: if true;
+      allow get: if isValidId(resourceId);
+      allow create: if isAdmin() && isValidId(resourceId) && isValidResource(incoming());
+      allow delete: if isAdmin() && isValidId(resourceId);
+      allow update: if isValidId(resourceId) && isValidResource(incoming()) && (
+        isAdmin() ||
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly(['downloadsCount']) &&
+          incoming().downloadsCount is number &&
+          incoming().downloadsCount == existing().downloadsCount + 1
+        ) ||
+        (
+          isVerified() &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['rating', 'ratingCount']) &&
+          incoming().rating is number && incoming().rating >= 0 && incoming().rating <= 5 &&
+          incoming().ratingCount is number && incoming().ratingCount >= 0
+        )
+      );
+
+      // Real user ratings subcollection
+      match /ratings/{userId} {
+        allow list: if isValidId(resourceId);
+        allow get: if isValidId(resourceId) && isValidId(userId);
+        allow create, update: if isVerified() && isValidId(resourceId) && isValidId(userId) &&
+                                 userId == request.auth.uid &&
+                                 exists(/databases/$(database)/documents/resources/$(resourceId)) &&
+                                 isValidRating(incoming()) &&
+                                 incoming().resourceId == resourceId;
+        allow delete: if isValidId(resourceId) && isValidId(userId) && (isAdmin() || (isVerified() && userId == request.auth.uid));
+      }
+    }
+
+    // 2. Projects collection
+    match /projects/{projectId} {
+      allow list: if true;
+      allow get: if isValidId(projectId);
+      allow create: if isAdmin() && isValidId(projectId) && isValidProject(incoming());
+      allow update: if isValidId(projectId) && isValidProject(incoming()) && (
+        isAdmin() ||
+        (
+          isVerified() &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['stars']) &&
+          incoming().stars is number &&
+          (incoming().stars == existing().stars + 1 || incoming().stars == existing().stars - 1) &&
+          incoming().stars >= 0
+        )
+      );
+      allow delete: if isAdmin() && isValidId(projectId);
+
+      // Project star records (1 per user)
+      match /stars/{userId} {
+        allow list: if isValidId(projectId);
+        allow get: if isValidId(projectId) && isValidId(userId);
+        allow create: if isVerified() && isValidId(projectId) && isValidId(userId) &&
+                         userId == request.auth.uid &&
+                         exists(/databases/$(database)/documents/projects/$(projectId)) &&
+                         incoming().keys().hasAll(['userId', 'createdAt']) &&
+                         incoming().keys().hasOnly(['userId', 'createdAt']) &&
+                         incoming().userId == request.auth.uid;
+        allow delete: if isValidId(projectId) && isValidId(userId) && (isAdmin() || (isVerified() && userId == request.auth.uid));
+      }
+    }
+
+    // 3. Announcements collection
+    match /announcements/{announcementId} {
+      allow list: if true;
+      allow get: if isValidId(announcementId);
+      allow create, update: if isAdmin() && isValidId(announcementId) && isValidAnnouncement(incoming());
+      allow delete: if isAdmin() && isValidId(announcementId);
+    }
+
+    // 4. Categories collection
+    match /categories/{categoryId} {
+      allow list: if true;
+      allow get: if isValidId(categoryId);
+      allow create, update: if isAdmin() && isValidId(categoryId) && isValidCategory(incoming());
+      allow delete: if isAdmin() && isValidId(categoryId);
+    }
+
+    // 5. Community Discussions
+    match /discussions/{discussionId} {
+      allow list: if true;
+      allow get: if isValidId(discussionId);
+      allow create: if isVerified() && isValidId(discussionId) && isValidDiscussion(incoming()) && incoming().authorId == request.auth.uid;
+      allow update: if isValidId(discussionId) && isValidDiscussion(incoming()) && (
+        isAdmin() ||
+        (
+          isVerified() &&
+          (
+            (
+              existing().authorId == request.auth.uid &&
+              (!('locked' in existing()) || existing().locked != true) &&
+              incoming().authorId == existing().authorId &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['title', 'content', 'category', 'tags', 'updatedAt'])
+            ) ||
+            (
+              incoming().diff(existing()).affectedKeys().hasOnly(['likesCount']) &&
+              incoming().likesCount is number &&
+              (incoming().likesCount == existing().likesCount + 1 || incoming().likesCount == existing().likesCount - 1) &&
+              incoming().likesCount >= 0
+            ) ||
+            (
+              incoming().diff(existing()).affectedKeys().hasOnly(['repliesCount', 'updatedAt']) &&
+              incoming().repliesCount is number &&
+              incoming().repliesCount >= 0
+            )
+          )
+        )
+      );
+      allow delete: if isValidId(discussionId) && (isAdmin() || (isVerified() && existing().authorId == request.auth.uid));
+
+      // Discussion likes subcollection (1 per user)
+      match /likes/{userId} {
+        allow list: if isValidId(discussionId);
+        allow get: if isValidId(discussionId) && isValidId(userId);
+        allow create: if isVerified() && isValidId(discussionId) && isValidId(userId) &&
+                         userId == request.auth.uid &&
+                         exists(/databases/$(database)/documents/discussions/$(discussionId)) &&
+                         incoming().keys().hasAll(['userId', 'createdAt']) &&
+                         incoming().keys().hasOnly(['userId', 'createdAt']) &&
+                         incoming().userId == request.auth.uid;
+        allow delete: if isValidId(discussionId) && isValidId(userId) && (isAdmin() || (isVerified() && userId == request.auth.uid));
+      }
+
+      // Nested comments subcollection
+      match /comments/{commentId} {
+        allow list: if isValidId(discussionId);
+        allow get: if isValidId(discussionId) && isValidId(commentId);
+        allow create: if isVerified() && isValidId(discussionId) && isValidId(commentId) &&
+                         exists(/databases/$(database)/documents/discussions/$(discussionId)) &&
+                         isValidComment(incoming()) &&
+                         incoming().authorId == request.auth.uid &&
+                         incoming().discussionId == discussionId;
+        allow update: if isValidId(discussionId) && isValidId(commentId) && isValidComment(incoming()) && (
+          isAdmin() ||
+          (
+            isVerified() && (
+              (
+                existing().authorId == request.auth.uid &&
+                incoming().authorId == existing().authorId &&
+                incoming().diff(existing()).affectedKeys().hasOnly(['content', 'updatedAt'])
+              ) ||
+              (
+                incoming().diff(existing()).affectedKeys().hasOnly(['likesCount']) &&
+                incoming().likesCount is number && incoming().likesCount >= 0
+              )
+            )
+          )
+        );
+        allow delete: if isValidId(discussionId) && isValidId(commentId) && (isAdmin() || (isVerified() && existing().authorId == request.auth.uid));
+      }
+    }
+
+    // 6. User Profiles (PII isolated: owner or admin only)
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (userId == request.auth.uid || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isVerified() && isValidId(userId) && userId == request.auth.uid &&
+                       isValidUserProfile(incoming()) &&
+                       (incoming().role == 'Member' || incoming().role == 'member' || isAdmin());
+      allow update: if isVerified() && isValidId(userId) && isValidUserProfile(incoming()) && (
+        isAdmin() ||
+        (
+          userId == request.auth.uid &&
+          incoming().role == existing().role &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'bio', 'discordHandle', 'youtubeHandle', 'bookmarks', 'downloadsCount', 'downloadActivity', 'updatedAt'])
+        )
+      );
+      allow delete: if isAdmin() && isValidId(userId);
+    }
+
+    // 7. Feedback / Contact messages
+    match /feedback/{feedbackId} {
+      allow create: if isValidId(feedbackId) && isValidFeedback(incoming()) &&
+                       incoming().status == 'new';
+      allow get, update, delete: if isAdmin() && isValidId(feedbackId);
+      allow list: if isAdmin();
+    }
+
+    // 8. Abuse and Content Moderation Reports
+    match /reports/{reportId} {
+      allow create: if isVerified() && isValidId(reportId) && isValidReport(incoming()) &&
+                       incoming().reporterId == request.auth.uid &&
+                       incoming().status == 'pending';
+      allow get, update, delete: if isAdmin() && isValidId(reportId);
+      allow list: if isAdmin();
+    }
+
+    // 9. Site Analytics Counter
+    match /analytics/{docId} {
+      allow get: if isValidId(docId);
+      allow create: if docId == 'site' &&
+                       incoming().keys().hasAll(['totalVisits', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['totalVisits', 'updatedAt']) &&
+                       incoming().totalVisits is number &&
+                       incoming().totalVisits == 1;
+      allow update: if docId == 'site' && (
+        isAdmin() ||
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly(['totalVisits', 'updatedAt']) &&
+          incoming().totalVisits is number &&
+          incoming().totalVisits == existing().totalVisits + 1
+        )
+      );
+    }
+
+    // 10. Admin Whitelist Registry
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && isValidId(adminId) && (adminId == request.auth.uid || isAdmin());
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin() && isValidId(adminId);
+    }
+  }
+}

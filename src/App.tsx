@@ -165,7 +165,7 @@ function readUrlParams() {
 
 function MainApp() {
   const { resources, startOrGetDMThread } = useData();
-  const { user, loading: authLoading, isAdmin, isVerifiedUser } = useAuth();
+  const { user, loading: authLoading, isAdmin } = useAuth();
   const initialParams = readUrlParams();
 
   const [currentTab, setCurrentTabState] = useState<string>(() =>

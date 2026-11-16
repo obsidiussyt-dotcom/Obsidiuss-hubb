@@ -78,10 +78,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
   return (
     <div className="space-y-16 sm:space-y-20 pb-12 animate-fade-up">
       {/* Split Hero */}
-      <section className="relative pt-8 sm:pt-14 pb-4 overflow-hidden">
-        <div className="animate-float-slow absolute -top-10 left-1/4 w-[520px] h-[360px] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
+      <section className="relative pt-8 sm:pt-14 pb-4 overflow-hidden bg-white">
+        <div className="animate-float-slow absolute -top-16 left-1/4 w-[520px] h-[340px] bg-blue-500/8 blur-[120px] rounded-full pointer-events-none" />
         <div
-          className="animate-float-slow absolute top-10 right-1/4 w-[380px] h-[320px] bg-pink-500/10 blur-[120px] rounded-full pointer-events-none"
+          className="animate-float-slow absolute top-12 right-1/4 w-[380px] h-[300px] bg-sky-400/8 blur-[120px] rounded-full pointer-events-none"
           style={{ animationDelay: '-3s' }}
         />
 
@@ -90,13 +90,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
             {/* Left Column */}
             <div className="lg:col-span-7 space-y-5 text-left">
               <div className="flex items-center gap-3 text-xs font-bold tracking-wider uppercase text-blue-600">
-                <span className="w-6 h-[2px] bg-gradient-to-r from-blue-600 to-orange-500 rounded-full" />
+                <span className="w-6 h-[2px] bg-blue-600 rounded-full" />
                 <span>Bhaskar Yadav (Obsidiuss) · Owner &amp; Developer</span>
               </div>
 
               <h1 className="font-display text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-950 leading-[1.08] [text-wrap:balance]">
                 Official{' '}
-                <span className="bg-gradient-to-r from-blue-600 via-pink-500 to-orange-500 bg-clip-text text-transparent animate-gradient-flow">
+                <span className="bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 bg-clip-text text-transparent">
                   OBSIDIUSS HUB
                 </span>{' '}
                 for Builds, Reels &amp; Community.
@@ -113,7 +113,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 <button
                   type="button"
                   onClick={() => navigate('resources')}
-                  className="min-h-[44px] flex items-center gap-2 px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-lg shadow-blue-600/25 transition active:scale-[0.98]"
+                  className="min-h-[44px] flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-600/20 transition active:scale-[0.98]"
                 >
                   <Download className="w-4 h-4" />
                   <span>Browse Downloads</span>
@@ -122,16 +122,16 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 <button
                   type="button"
                   onClick={() => navigate('reels')}
-                  className="min-h-[44px] flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-orange-500 hover:opacity-95 text-white font-bold text-sm shadow-lg shadow-pink-500/20 transition active:scale-[0.98]"
+                  className="min-h-[44px] flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-bold text-sm transition active:scale-[0.98]"
                 >
-                  <Film className="w-4 h-4" />
+                  <Film className="w-4 h-4 text-blue-600" />
                   <span>Watch Reels</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => navigate('projects')}
-                  className="min-h-[44px] flex items-center gap-2 px-5 py-3 rounded-2xl bg-white hover:bg-blue-50 border border-slate-200 text-slate-800 font-semibold text-sm shadow-xs transition"
+                  className="min-h-[44px] flex items-center gap-2 px-5 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-semibold text-sm shadow-xs transition"
                 >
                   <FolderGit2 className="w-4 h-4 text-blue-600" />
                   <span>Projects</span>
@@ -306,25 +306,25 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <button
             type="button"
             onClick={() => navigate('reels')}
-            className="p-5 sm:p-6 rounded-3xl glass-panel glass-panel-hover text-left flex flex-col justify-between gap-4 group"
+            className="p-5 sm:p-6 rounded-2xl glass-panel glass-panel-hover text-left flex flex-col justify-between gap-4 group"
           >
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-orange-500 via-pink-500 to-blue-600 flex items-center justify-center text-white shadow-md shadow-pink-500/20">
+                <div className="w-11 h-11 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm shadow-blue-600/20">
                   <Film className="w-5 h-5" />
                 </div>
-                <span className="text-xs font-mono text-slate-500 tabular-nums">
+                <span className="text-xs font-mono text-blue-600 font-semibold tabular-nums">
                   {reels.length} {reels.length === 1 ? 'reel' : 'reels'}
                 </span>
               </div>
-              <h3 className="font-display text-lg font-bold text-slate-950 group-hover:text-pink-600 transition">
-                Instagram-Style Reels
+              <h3 className="font-display text-lg font-bold text-slate-950 group-hover:text-blue-600 transition">
+                Reels &amp; Short Clips
               </h3>
               <p className="text-xs text-slate-600 leading-relaxed">
                 Double-tap to heart, swipe vertical clips, browse Explore Grid, and save favorites.
               </p>
             </div>
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-pink-600">
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
               <span>Open Reels</span>
               <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
@@ -333,11 +333,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <button
             type="button"
             onClick={() => navigate('chat')}
-            className="p-5 sm:p-6 rounded-3xl glass-panel glass-panel-hover text-left flex flex-col justify-between gap-4 group"
+            className="p-5 sm:p-6 rounded-2xl glass-panel glass-panel-hover text-left flex flex-col justify-between gap-4 group"
           >
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <div className="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
+                <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
                   <Hash className="w-5 h-5" />
                 </div>
                 <span className="text-xs font-mono text-blue-600 font-semibold">4 Channels</span>
@@ -358,23 +358,23 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <button
             type="button"
             onClick={() => navigate('dms')}
-            className="p-5 sm:p-6 rounded-3xl glass-panel glass-panel-hover text-left flex flex-col justify-between gap-4 group"
+            className="p-5 sm:p-6 rounded-2xl glass-panel glass-panel-hover text-left flex flex-col justify-between gap-4 group"
           >
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <div className="w-11 h-11 rounded-2xl bg-orange-50 border border-orange-200 flex items-center justify-center text-orange-600">
+                <div className="w-11 h-11 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600">
                   <Mail className="w-5 h-5" />
                 </div>
-                <span className="text-xs font-mono text-orange-600 font-semibold">Private 1-on-1</span>
+                <span className="text-xs font-mono text-sky-600 font-semibold">Private 1-on-1</span>
               </div>
-              <h3 className="font-display text-lg font-bold text-slate-950 group-hover:text-orange-600 transition">
+              <h3 className="font-display text-lg font-bold text-slate-950 group-hover:text-blue-600 transition">
                 Direct Messages
               </h3>
               <p className="text-xs text-slate-600 leading-relaxed">
                 Send private messages directly to Bhaskar Yadav or any registered member.
               </p>
             </div>
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-orange-600">
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
               <span>Open Inbox</span>
               <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
@@ -714,9 +714,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
       {/* Latest Devlog Strip */}
       {latestAnnouncement && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="p-5 sm:p-7 rounded-3xl bg-gradient-to-r from-blue-50 via-white to-pink-50 border border-blue-200/70 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="p-5 sm:p-7 rounded-2xl bg-gradient-to-r from-blue-50/70 via-white to-sky-50/70 border border-blue-200/80 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-600 to-pink-500 text-white shadow-md shrink-0">
+              <div className="p-3 rounded-xl bg-blue-600 text-white shadow-sm shrink-0">
                 <Bell className="w-5 h-5" />
               </div>
               <div className="space-y-1">

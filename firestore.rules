@@ -8,7 +8,6 @@ service cloud.firestore {
     }
 
     // Helper functions
-    // Helper functions
     function isSignedIn() {
       return request.auth != null;
     }
@@ -20,7 +19,13 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.email == 'obsidiussyt@gmail.com' ||
+        (
+          request.auth.token.email == 'obsidiussyt@gmail.com' &&
+          (
+            request.auth.token.email_verified == true ||
+            request.auth.token.firebase.sign_in_provider == 'google.com'
+          )
+        ) ||
         exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }

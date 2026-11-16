@@ -37,11 +37,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             className={`min-h-[44px] flex flex-col items-center justify-center gap-0.5 rounded-xl transition active:scale-95 ${
-              active
-                ? isReels
-                  ? 'text-pink-600'
-                  : 'text-blue-600'
-                : 'text-slate-500 hover:text-slate-900'
+              active ? 'text-blue-600' : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             <Icon className={`w-[19px] h-[19px] ${active ? 'scale-110 transition-transform' : ''}`} />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Mail,
   Lock,
@@ -11,7 +11,7 @@ import {
   ShieldCheck,
   AlertCircle,
   HelpCircle,
-  KeyRound,
+  Sparkles,
   RotateCcw,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -23,7 +23,7 @@ interface AuthExperienceProps {
   compact?: boolean;
 }
 
-type AuthMode = 'signin' | 'signup' | 'reset' | 'otp';
+type AuthMode = 'otp-link' | 'signin' | 'signup' | 'reset';
 
 function mapFirebaseAuthError(err: any): { message: string; tip?: string } {
   const code = err?.code || '';
@@ -36,12 +36,12 @@ function mapFirebaseAuthError(err: any): { message: string; tip?: string } {
     case 'auth/user-not-found':
       return {
         message: 'No account was found with this email.',
-        tip: 'Switch to the "Register" tab to create your free member account.',
+        tip: 'Switch to "Email OTP" or "Register" to create your free member account.',
       };
     case 'auth/email-already-in-use':
       return {
         message: 'An account with this email already exists.',
-        tip: 'Switch to the "Sign In" tab or use "Forgot Password".',
+        tip: 'Switch to "Password" sign-in or use "Email OTP".',
       };
     case 'auth/weak-password':
       return {
@@ -51,42 +51,47 @@ function mapFirebaseAuthError(err: any): { message: string; tip?: string } {
       return {
         message: 'Please enter a valid email address format (e.g. name@domain.com).',
       };
+    case 'auth/expired-action-code':
+    case 'auth/invalid-action-code':
+      return {
+        message: 'This OTP sign-in link has expired or was already used.',
+        tip: 'Request a fresh Email OTP link below.',
+      };
     case 'auth/too-many-requests':
       return {
-        message: 'Access temporarily blocked due to multiple failed attempts.',
-        tip: 'Please wait a couple of minutes before trying again or reset your password.',
+        message: 'Too many requests. Please wait a moment before trying again.',
       };
     case 'auth/operation-not-allowed':
       return {
-        message: 'Sign-in provider is disabled in your Firebase project.',
-        tip: 'Enable Google or Email/Password in Firebase Console → Authentication → Sign-in method.',
+        message: 'This email sign-in method is not yet enabled in your Firebase project.',
+        tip: 'In Firebase Console → Authentication → Sign-in method → Email/Password, enable both Email/Password and Email link (passwordless sign-in).',
       };
     case 'auth/unauthorized-domain':
       return {
-        message: 'This web domain is not yet authorized in Firebase Auth.',
-        tip: 'Add this domain to Firebase Console → Authentication → Settings → Authorized domains.',
+        message: 'This domain is not authorized in Firebase Authentication.',
+        tip: 'Add this domain under Firebase Console → Authentication → Settings → Authorized domains.',
       };
     case 'auth/popup-blocked':
       return {
         message: 'Google Sign-In popup was blocked by your browser.',
-        tip: 'Please enable popups for this site in your browser settings.',
+        tip: 'Allow popups for this site and click Continue with Google again.',
       };
     case 'auth/popup-closed-by-user':
       return {
-        message: 'Google Sign-In window was closed before completion.',
+        message: 'Google Sign-In window was closed before completing.',
       };
     case 'auth/account-exists-with-different-credential':
       return {
-        message: 'An account already exists with the same email using a different sign-in method.',
-        tip: 'Try signing in with Google or Email/Password depending on which one was first registered.',
+        message: 'An account already exists with this email using a different sign-in provider.',
+        tip: 'Try signing in with Google or Email OTP.',
       };
     case 'auth/network-request-failed':
       return {
-        message: 'Network request failed. Please check your internet connection.',
+        message: 'Network error. Please check your internet connection.',
       };
     default:
       return {
-        message: err?.message || 'Authentication request failed. Please try again.',
+        message: err?.message || 'Authentication failed. Please try again.',
       };
   }
 }
@@ -97,54 +102,40 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
   compact = false,
 }) => {
   const {
+    pendingEmailLinkPrompt,
+    emailLinkError,
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,
+    sendEmailOtpLink,
+    completeEmailOtpLink,
+    dismissEmailLinkPrompt,
     sendPasswordReset,
   } = useAuth();
   const { showToast } = useToast();
 
-  const [mode, setMode] = useState<AuthMode>('signin');
+  const [mode, setMode] = useState<AuthMode>('otp-link');
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
+  const [confirmLinkEmail, setConfirmLinkEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorDetails, setErrorDetails] = useState<{ message: string; tip?: string } | null>(null);
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
 
-  // OTP Verification State
-  const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
-  const [expectedOtp, setExpectedOtp] = useState<string>('');
-  const [otpPendingEmail, setOtpPendingEmail] = useState<string>('');
-  const [otpCountdown, setOtpCountdown] = useState<number>(30);
-  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  // Real Firebase Email Link OTP dispatch state
+  const [otpLinkSentTo, setOtpLinkSentTo] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState<number>(0);
 
-  // OTP Countdown timer
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (mode === 'otp' && otpCountdown > 0) {
-      timer = setTimeout(() => setOtpCountdown((c) => c - 1), 1000);
-    }
+    if (resendCooldown <= 0) return;
+    const timer: ReturnType<typeof setTimeout> = setTimeout(
+      () => setResendCooldown((prev) => prev - 1),
+      1000
+    );
     return () => clearTimeout(timer);
-  }, [mode, otpCountdown]);
-
-  const generateAndDispatchOtp = (targetEmail: string) => {
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    setExpectedOtp(code);
-    setOtpPendingEmail(targetEmail);
-    setOtpDigits(['', '', '', '', '', '']);
-    setOtpCountdown(30);
-    setMode('otp');
-    setErrorDetails(null);
-    setInfoMsg(`A 6-digit OTP code has been generated for ${targetEmail}.`);
-    showToast(`OTP Code generated: ${code}`, 'info');
-
-    // Auto focus first OTP input box on next tick
-    setTimeout(() => {
-      otpInputRefs.current[0]?.focus();
-    }, 150);
-  };
+  }, [resendCooldown]);
 
   const handleGoogle = async () => {
     setErrorDetails(null);
@@ -152,12 +143,27 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
     setSubmitting(true);
     try {
       await signInWithGoogle();
-      showToast('Signed in successfully with Google!', 'success');
+      showToast('Signed in with Google!', 'success');
       onSuccess?.();
     } catch (err: any) {
       const errInfo = mapFirebaseAuthError(err);
       setErrorDetails(errInfo);
       showToast(errInfo.message, 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCompleteCrossDeviceLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorDetails(null);
+    setSubmitting(true);
+    try {
+      await completeEmailOtpLink(confirmLinkEmail);
+      showToast('Email verified and signed in!', 'success');
+      onSuccess?.();
+    } catch (err: any) {
+      setErrorDetails(mapFirebaseAuthError(err));
     } finally {
       setSubmitting(false);
     }
@@ -176,10 +182,15 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
 
     setSubmitting(true);
     try {
-      if (mode === 'reset') {
+      if (mode === 'otp-link') {
+        await sendEmailOtpLink(cleanEmail, displayName);
+        setOtpLinkSentTo(cleanEmail);
+        setResendCooldown(30);
+        showToast(`One-time sign-in link sent to ${cleanEmail}`, 'success');
+      } else if (mode === 'reset') {
         await sendPasswordReset(cleanEmail);
         setInfoMsg(`Password reset link sent to ${cleanEmail}. Check your inbox & spam folder.`);
-        showToast('Password reset link dispatched.', 'success');
+        showToast('Password reset link sent.', 'success');
       } else if (mode === 'signup') {
         if (password.length < 6) {
           setErrorDetails({ message: 'Password must be at least 6 characters long.' });
@@ -187,10 +198,12 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
           return;
         }
         await signUpWithEmail(cleanEmail, password, displayName);
-        generateAndDispatchOtp(cleanEmail);
-      } else if (mode === 'signin') {
+        showToast('Account created! Welcome to OBSIDIUSS HUB.', 'success');
+        onSuccess?.();
+      } else {
         await signInWithEmail(cleanEmail, password);
-        generateAndDispatchOtp(cleanEmail);
+        showToast('Welcome back! Signed in.', 'success');
+        onSuccess?.();
       }
     } catch (err: any) {
       const errInfo = mapFirebaseAuthError(err);
@@ -200,222 +213,163 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
     }
   };
 
-  const handleOtpChange = (index: number, val: string) => {
-    // Only accept numeric digit
-    const cleaned = val.replace(/\D/g, '');
-    const newDigits = [...otpDigits];
-
-    if (cleaned.length > 1) {
-      // Pasted multiple characters
-      const pastedDigits = cleaned.slice(0, 6).split('');
-      pastedDigits.forEach((char, i) => {
-        if (index + i < 6) newDigits[index + i] = char;
-      });
-      setOtpDigits(newDigits);
-      const nextFocus = Math.min(index + pastedDigits.length, 5);
-      otpInputRefs.current[nextFocus]?.focus();
-      return;
-    }
-
-    newDigits[index] = cleaned;
-    setOtpDigits(newDigits);
-
-    // Auto-advance to next input if filled
-    if (cleaned && index < 5) {
-      otpInputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
-      otpInputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleOtpVerify = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleResendOtpLink = async () => {
+    if (!otpLinkSentTo || resendCooldown > 0) return;
+    setSubmitting(true);
     setErrorDetails(null);
-    const entered = otpDigits.join('');
-
-    if (entered.length < 6) {
-      setErrorDetails({ message: 'Please enter all 6 digits of the OTP code.' });
-      return;
-    }
-
-    if (entered === expectedOtp) {
-      showToast('OTP verified! Welcome to OBSIDIUSS HUB.', 'success');
-      onSuccess?.();
-    } else {
-      setErrorDetails({
-        message: 'Invalid verification code. Please check the 6 digits and try again.',
-        tip: 'Click "Resend Code" if you need a new OTP.',
-      });
-      showToast('Incorrect OTP code.', 'error');
+    try {
+      await sendEmailOtpLink(otpLinkSentTo, displayName);
+      setResendCooldown(30);
+      showToast(`Fresh OTP link sent to ${otpLinkSentTo}`, 'success');
+    } catch (err: any) {
+      setErrorDetails(mapFirebaseAuthError(err));
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleResendOtp = () => {
-    if (otpCountdown > 0) return;
-    generateAndDispatchOtp(otpPendingEmail || email);
-  };
-
-  // OTP Verification Screen
-  if (mode === 'otp') {
+  // Screen 1: Completing a Firebase Email OTP link opened from another browser/device
+  if (pendingEmailLinkPrompt) {
     return (
       <div className="space-y-5 animate-fade-up">
-        <div className="text-center space-y-1.5">
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center mx-auto shadow-sm">
-            <KeyRound className="w-6 h-6" />
+        <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 space-y-1.5">
+          <div className="flex items-center gap-2 text-blue-700 font-bold text-sm">
+            <ShieldCheck className="w-4 h-4 shrink-0" />
+            <span>Confirm Your Email to Finish Sign-In</span>
           </div>
-          <h3 className="font-display text-lg font-black text-slate-950">
-            Email OTP Verification
-          </h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            We generated a 6-digit security OTP code for{' '}
-            <strong className="text-slate-900">{otpPendingEmail || email}</strong>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            For your security, re-enter the email address where you received this one-time sign-in
+            link.
           </p>
         </div>
 
-        {/* Security Notification Banner with OTP */}
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50 via-sky-50 to-blue-50 border border-blue-200 shadow-sm space-y-1.5 text-center">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700">
-            Obsidiuss One-Time Code
-          </span>
-          <div className="text-2xl font-mono font-black text-blue-700 tracking-[0.25em]">
-            {expectedOtp}
-          </div>
-          <p className="text-[11px] text-slate-500">
-            Enter this 6-digit verification code below to confirm your login.
-          </p>
-        </div>
-
-        <form onSubmit={handleOtpVerify} className="space-y-4">
-          {/* 6 Digit Input Boxes */}
-          <div className="flex items-center justify-center gap-2 sm:gap-2.5">
-            {otpDigits.map((digit, idx) => (
-              <input
-                key={idx}
-                ref={(el) => {
-                  otpInputRefs.current[idx] = el;
-                }}
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleOtpChange(idx, e.target.value)}
-                onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                className="w-11 h-12 sm:w-12 sm:h-14 text-center font-mono font-black text-lg sm:text-xl rounded-xl bg-slate-50 border border-slate-200 text-slate-950 focus:bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition shadow-xs"
-              />
-            ))}
-          </div>
-
-          {errorDetails && (
-            <div className="p-3 rounded-xl bg-pink-50 border border-pink-200 text-xs text-pink-900 space-y-0.5">
-              <div className="flex items-center gap-1.5 font-semibold">
-                <AlertCircle className="w-4 h-4 text-pink-600 shrink-0" />
-                <span>{errorDetails.message}</span>
-              </div>
-              {errorDetails.tip && <p className="text-[11px] text-pink-700 pl-5">{errorDetails.tip}</p>}
+        {(emailLinkError || errorDetails) && (
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 space-y-1">
+            <div className="flex items-start gap-2 font-semibold">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <span>{errorDetails?.message || emailLinkError}</span>
             </div>
-          )}
+            {errorDetails?.tip && (
+              <p className="text-[11px] text-rose-700 pl-6">{errorDetails.tip}</p>
+            )}
+          </div>
+        )}
+
+        <form onSubmit={handleCompleteCrossDeviceLink} className="space-y-3.5">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Email Address
+            </label>
+            <div className="relative">
+              <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="email"
+                value={confirmLinkEmail}
+                onChange={(e) => setConfirmLinkEmail(e.target.value)}
+                placeholder="name@domain.com"
+                required
+                className="w-full min-h-[44px] pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15 transition"
+              />
+            </div>
+          </div>
 
           <button
             type="submit"
-            className="w-full min-h-[46px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white font-bold text-sm shadow-lg shadow-blue-600/25 transition active:scale-[0.99]"
+            disabled={submitting}
+            className="w-full min-h-[46px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-600/20 transition disabled:opacity-50"
           >
             <ShieldCheck className="w-4 h-4" />
-            <span>Verify OTP &amp; Enter</span>
+            <span>{submitting ? 'Verifying...' : 'Verify & Enter Hub'}</span>
           </button>
 
-          <div className="flex items-center justify-between text-xs pt-1">
-            <button
-              type="button"
-              onClick={handleResendOtp}
-              disabled={otpCountdown > 0}
-              className={`inline-flex items-center gap-1.5 font-semibold transition ${
-                otpCountdown > 0 ? 'text-slate-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-700'
-              }`}
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>{otpCountdown > 0 ? `Resend OTP in ${otpCountdown}s` : 'Resend OTP Code'}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setMode('signin');
-                setErrorDetails(null);
-              }}
-              className="font-semibold text-slate-500 hover:text-slate-800"
-            >
-              Use different email
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={dismissEmailLinkPrompt}
+            className="w-full py-2 text-xs font-semibold text-slate-500 hover:text-blue-600 transition"
+          >
+            Cancel and return to sign-in
+          </button>
         </form>
+      </div>
+    );
+  }
+
+  // Screen 2: Email OTP Link Dispatched Screen
+  if (otpLinkSentTo) {
+    return (
+      <div className="space-y-5 animate-fade-up">
+        <div className="text-center space-y-2">
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center mx-auto shadow-xs">
+            <Mail className="w-6 h-6" />
+          </div>
+          <h3 className="font-display text-lg font-black text-slate-950">
+            Check Your Email Inbox
+          </h3>
+          <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
+            Firebase Authentication sent a secure one-time sign-in link to{' '}
+            <strong className="text-slate-950">{otpLinkSentTo}</strong>.
+          </p>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2 text-xs text-slate-700">
+          <div className="flex items-center gap-2 font-bold text-blue-800">
+            <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
+            <span>One-Tap Verified Access</span>
+          </div>
+          <p className="leading-relaxed">
+            Click the sign-in link in your email (also check Spam / Promotions). You will be signed
+            in immediately with full member permissions—no password required.
+          </p>
+        </div>
+
+        {errorDetails && (
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 space-y-1">
+            <div className="flex items-start gap-2 font-semibold">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <span>{errorDetails.message}</span>
+            </div>
+            {errorDetails.tip && <p className="text-[11px] text-rose-700 pl-6">{errorDetails.tip}</p>}
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-2.5">
+          <button
+            type="button"
+            onClick={handleResendOtpLink}
+            disabled={submitting || resendCooldown > 0}
+            className="flex-1 min-h-[44px] flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition disabled:opacity-50"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>
+              {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend OTP Link'}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOtpLinkSentTo(null);
+              setErrorDetails(null);
+            }}
+            className="flex-1 min-h-[44px] py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-semibold transition"
+          >
+            Use Another Method
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className={compact ? 'space-y-4' : 'space-y-5'}>
-      {/* Mode Switcher Tabs */}
-      <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-slate-100/90 border border-slate-200">
-        <button
-          type="button"
-          onClick={() => {
-            setMode('signin');
-            setErrorDetails(null);
-            setInfoMsg(null);
-          }}
-          className={`min-h-[40px] py-2 px-2 sm:px-3 rounded-xl text-xs font-bold transition whitespace-nowrap ${
-            mode === 'signin'
-              ? 'bg-white text-blue-600 shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          Sign In
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setMode('signup');
-            setErrorDetails(null);
-            setInfoMsg(null);
-          }}
-          className={`min-h-[40px] py-2 px-2 sm:px-3 rounded-xl text-xs font-bold transition whitespace-nowrap ${
-            mode === 'signup'
-              ? 'bg-white text-blue-600 shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          Register
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setMode('reset');
-            setErrorDetails(null);
-            setInfoMsg(null);
-          }}
-          className={`min-h-[40px] py-2 px-2 sm:px-3 rounded-xl text-xs font-bold transition whitespace-nowrap ${
-            mode === 'reset'
-              ? 'bg-white text-blue-600 shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          Forgot Password
-        </button>
-      </div>
-
-      {/* Google Sign-In Button */}
+      {/* Google OAuth CTA */}
       {mode !== 'reset' && (
         <div className="space-y-3.5">
           <button
             type="button"
             onClick={handleGoogle}
             disabled={submitting}
-            className="w-full min-h-[46px] flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-white hover:bg-blue-50/40 text-slate-900 border border-slate-200 hover:border-blue-300 font-bold text-sm shadow-sm transition active:scale-[0.99] disabled:opacity-50"
+            className="w-full min-h-[46px] flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-white hover:bg-blue-50/50 text-slate-900 border border-slate-200 hover:border-blue-300 font-bold text-sm shadow-xs transition active:scale-[0.99] disabled:opacity-50"
           >
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
               <path
@@ -440,20 +394,70 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
 
           <div className="relative flex items-center justify-center">
             <div className="w-full border-t border-slate-200" />
-            <span className="px-3 text-[11px] font-semibold text-slate-400 bg-white uppercase tracking-wider">
-              or continue with email &amp; OTP
+            <span className="px-3 text-[11px] font-semibold text-slate-400 bg-white uppercase tracking-wider whitespace-nowrap">
+              or continue with email
             </span>
             <div className="w-full border-t border-slate-200" />
           </div>
         </div>
       )}
 
-      {/* Main Email/Password Form */}
+      {/* Mode Switcher Tabs */}
+      <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100 border border-slate-200">
+        <button
+          type="button"
+          onClick={() => {
+            setMode('otp-link');
+            setErrorDetails(null);
+            setInfoMsg(null);
+          }}
+          className={`min-h-[38px] py-1.5 px-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center justify-center gap-1 ${
+            mode === 'otp-link'
+              ? 'bg-white text-blue-600 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <Sparkles className="w-3 h-3" />
+          <span>Email OTP</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setMode('signin');
+            setErrorDetails(null);
+            setInfoMsg(null);
+          }}
+          className={`min-h-[38px] py-1.5 px-2 rounded-lg text-xs font-bold transition whitespace-nowrap ${
+            mode === 'signin'
+              ? 'bg-white text-blue-600 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          Password
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setMode('signup');
+            setErrorDetails(null);
+            setInfoMsg(null);
+          }}
+          className={`min-h-[38px] py-1.5 px-2 rounded-lg text-xs font-bold transition whitespace-nowrap ${
+            mode === 'signup'
+              ? 'bg-white text-blue-600 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          Register
+        </button>
+      </div>
+
+      {/* Main Email Form */}
       <form onSubmit={handleSubmit} className="space-y-3.5">
-        {mode === 'signup' && (
+        {(mode === 'signup' || mode === 'otp-link') && (
           <div className="animate-fade-up">
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Community Username
+              Display Name {mode === 'otp-link' && <span className="text-slate-400 font-normal">(optional)</span>}
             </label>
             <div className="relative">
               <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -463,8 +467,8 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="e.g. PixelCrafter, DevSpeed"
                 maxLength={80}
-                required
-                className="w-full min-h-[44px] pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition"
+                required={mode === 'signup'}
+                className="w-full min-h-[44px] pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15 transition"
               />
             </div>
           </div>
@@ -483,12 +487,12 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
               placeholder="name@domain.com"
               required
               autoComplete="email"
-              className="w-full min-h-[44px] pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition"
+              className="w-full min-h-[44px] pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15 transition"
             />
           </div>
         </div>
 
-        {mode !== 'reset' && (
+        {(mode === 'signin' || mode === 'signup') && (
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="block text-xs font-semibold text-slate-700">Password</label>
@@ -516,7 +520,7 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
                 required
                 minLength={6}
                 autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                className="w-full min-h-[44px] pl-10 pr-11 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition"
+                className="w-full min-h-[44px] pl-10 pr-11 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15 transition"
               />
               <button
                 type="button"
@@ -527,22 +531,25 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            {mode === 'signup' && (
-              <p className="text-[11px] text-slate-500 mt-1">Must be at least 6 characters.</p>
-            )}
           </div>
+        )}
+
+        {mode === 'otp-link' && (
+          <p className="text-[11px] text-slate-500 leading-relaxed">
+            Firebase will send a verified one-time sign-in link to your email. No password needed.
+          </p>
         )}
 
         {/* Error message card */}
         {errorDetails && (
-          <div className="p-3.5 rounded-xl bg-pink-50 border border-pink-200 text-xs text-pink-900 space-y-1 animate-fade-up">
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-900 space-y-1 animate-fade-up">
             <div className="flex items-start gap-2 font-semibold">
-              <AlertCircle className="w-4 h-4 text-pink-600 shrink-0 mt-0.5" />
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
               <span>{errorDetails.message}</span>
             </div>
             {errorDetails.tip && (
-              <div className="flex items-start gap-1.5 text-[11px] text-pink-700 pl-6">
-                <HelpCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-pink-500" />
+              <div className="flex items-start gap-1.5 text-[11px] text-rose-700 pl-6">
+                <HelpCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-rose-500" />
                 <span>{errorDetails.tip}</span>
               </div>
             )}
@@ -561,16 +568,18 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
         <button
           type="submit"
           disabled={submitting}
-          className="w-full min-h-[46px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 text-white font-bold text-sm shadow-lg shadow-blue-600/25 transition active:scale-[0.99] disabled:opacity-50"
+          className="w-full min-h-[46px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-600/20 transition active:scale-[0.99] disabled:opacity-50"
         >
           <span>
             {submitting
-              ? 'Processing...'
+              ? 'Sending...'
+              : mode === 'otp-link'
+              ? 'Send One-Time Sign-In Link'
               : mode === 'signin'
-              ? 'Continue to OTP Verification'
+              ? 'Sign In to Hub'
               : mode === 'signup'
-              ? 'Create Account & Verify OTP'
-              : 'Send Password Reset Email'}
+              ? 'Create Member Account'
+              : 'Send Password Reset Link'}
           </span>
           <ArrowRight className="w-4 h-4" />
         </button>
@@ -591,13 +600,13 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
 
       {/* Community Rules Link */}
       {onOpenRules && (
-        <div className="pt-3 text-center border-t border-slate-100 flex items-center justify-center gap-3">
+        <div className="pt-3 text-center border-t border-slate-100 flex items-center justify-center">
           <button
             type="button"
             onClick={onOpenRules}
             className="inline-flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-blue-600 font-semibold transition"
           >
-            <BookOpen className="w-3.5 h-3.5 text-orange-500" />
+            <BookOpen className="w-3.5 h-3.5 text-blue-600" />
             <span>Community Rules &amp; Code of Conduct</span>
           </button>
         </div>

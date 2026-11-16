@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import {
   User as FirebaseUser,
   GoogleAuthProvider,
@@ -7,6 +7,9 @@ import {
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   sendEmailVerification,
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  signInWithEmailLink,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   updateProfile as firebaseUpdateProfile,
@@ -15,6 +18,9 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db, handleFirestoreError, OperationType } from '../firebase';
 import { UserProfile, PublicProfile, DownloadActivityItem } from '../types';
 
+const EMAIL_FOR_SIGNIN_KEY = 'obsidiuss_email_for_signin';
+const NAME_FOR_SIGNIN_KEY = 'obsidiuss_name_for_signin';
+
 interface AuthContextType {
   user: FirebaseUser | null;
   profile: UserProfile | null;
@@ -22,9 +28,14 @@ interface AuthContextType {
   isAdmin: boolean;
   isCreator: boolean;
   isVerifiedUser: boolean;
+  pendingEmailLinkPrompt: boolean;
+  emailLinkError: string | null;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
+  sendEmailOtpLink: (email: string, displayName?: string) => Promise<void>;
+  completeEmailOtpLink: (email: string, displayName?: string) => Promise<void>;
+  dismissEmailLinkPrompt: () => void;
   sendPasswordReset: (email: string) => Promise<void>;
   resendVerificationEmail: () => Promise<void>;
   refreshAuthUser: () => Promise<boolean>;
@@ -65,6 +76,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [hasAdminDoc, setHasAdminDoc] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [pendingEmailLinkPrompt, setPendingEmailLinkPrompt] = useState<boolean>(false);
+  const [emailLinkError, setEmailLinkError] = useState<string | null>(null);
   const [downloadHistory, setDownloadHistory] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem('obsidiuss_downloads');
@@ -74,6 +87,59 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   });
 
+  const completeEmailOtpLink = useCallback(async (emailInput: string, displayNameInput?: string) => {
+    const cleanEmail = emailInput.trim();
+    if (!cleanEmail) throw new Error('Please enter your email address to complete sign-in.');
+
+    setLoading(true);
+    setEmailLinkError(null);
+    try {
+      const cred = await signInWithEmailLink(auth, cleanEmail, window.location.href);
+      const savedName =
+        displayNameInput?.trim() ||
+        window.localStorage.getItem(NAME_FOR_SIGNIN_KEY) ||
+        '';
+
+      if (savedName && !cred.user.displayName) {
+        try {
+          await firebaseUpdateProfile(cred.user, { displayName: savedName.slice(0, 80) });
+        } catch (err) {
+          console.warn('Could not set initial displayName:', err);
+        }
+      }
+
+      window.localStorage.removeItem(EMAIL_FOR_SIGNIN_KEY);
+      window.localStorage.removeItem(NAME_FOR_SIGNIN_KEY);
+      setPendingEmailLinkPrompt(false);
+
+      // Clean Firebase OTP query parameters from the URL
+      const cleanPath = window.location.pathname === '/signin' ? '/' : window.location.pathname;
+      window.history.replaceState(null, '', cleanPath);
+    } catch (err: any) {
+      console.error('Email Link Verification Error:', err);
+      setEmailLinkError(err?.message || 'The verification link has expired or is invalid.');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Automatically detect incoming Firebase Email OTP Sign-In Link
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+      const savedEmail = window.localStorage.getItem(EMAIL_FOR_SIGNIN_KEY);
+      if (savedEmail) {
+        completeEmailOtpLink(savedEmail).catch(() => {
+          setPendingEmailLinkPrompt(true);
+        });
+      } else {
+        // User opened the OTP link on a different browser/device: prompt for email confirmation
+        setPendingEmailLinkPrompt(true);
+      }
+    }
+  }, [completeEmailOtpLink]);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
@@ -82,7 +148,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           currentUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
         try {
-          // Check /admins/{uid} doc in case additional admin is registered
           try {
             const adminSnap = await getDoc(doc(db, 'admins', currentUser.uid));
             setHasAdminDoc(adminSnap.exists());
@@ -106,17 +171,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setProfile(data);
             syncPublicProfileDoc(data);
           } else {
+            const storedPendingName =
+              typeof window !== 'undefined'
+                ? window.localStorage.getItem(NAME_FOR_SIGNIN_KEY)
+                : '';
             const fallbackName =
               currentUser.displayName ||
+              storedPendingName ||
               currentUser.email?.split('@')[0] ||
               (isMainAdmin ? 'Obsidiuss' : 'Community Member');
+
             const initialProfile: UserProfile = {
               uid: currentUser.uid,
               displayName: fallbackName.slice(0, 80),
               email: currentUser.email || '',
               photoURL: currentUser.photoURL || '',
               role: isMainAdmin ? 'Creator' : 'Member',
-              bio: isMainAdmin ? 'Owner & Creator of OBSIDIUSS HUB — Bhaskar Yadav (Obsidiuss).' : '',
+              bio: isMainAdmin
+                ? 'Owner & Creator of OBSIDIUSS HUB — Bhaskar Yadav (Obsidiuss).'
+                : '',
               discordHandle: '',
               youtubeHandle: isMainAdmin ? '@obsidiuss' : '',
               downloadsCount: 0,
@@ -191,13 +264,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } catch (verifyErr) {
         console.warn('Could not dispatch initial verification email:', verifyErr);
       }
+      const isMainAdmin = email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
       const userDocRef = doc(db, 'users', cred.user.uid);
       const newProfile: UserProfile = {
         uid: cred.user.uid,
         displayName: cleanName,
         email: cred.user.email || email.trim(),
         photoURL: '',
-        role: 'Member',
+        role: isMainAdmin ? 'Creator' : 'Member',
         bio: '',
         discordHandle: '',
         youtubeHandle: '',
@@ -216,6 +290,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const sendEmailOtpLink = async (emailInput: string, displayNameInput?: string) => {
+    const cleanEmail = emailInput.trim();
+    const actionCodeSettings = {
+      url: `${window.location.origin}/signin`,
+      handleCodeInApp: true,
+    };
+
+    await sendSignInLinkToEmail(auth, cleanEmail, actionCodeSettings);
+    window.localStorage.setItem(EMAIL_FOR_SIGNIN_KEY, cleanEmail);
+    if (displayNameInput?.trim()) {
+      window.localStorage.setItem(NAME_FOR_SIGNIN_KEY, displayNameInput.trim().slice(0, 80));
+    }
+  };
+
+  const dismissEmailLinkPrompt = () => {
+    setPendingEmailLinkPrompt(false);
+    setEmailLinkError(null);
+    const cleanPath = window.location.pathname === '/signin' ? '/' : window.location.pathname;
+    window.history.replaceState(null, '', cleanPath);
+  };
+
   const sendPasswordReset = async (email: string) => {
     await sendPasswordResetEmail(auth, email.trim());
   };
@@ -230,10 +325,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await auth.currentUser.reload();
     const updatedUser = auth.currentUser;
     setUser({ ...updatedUser } as FirebaseUser);
-    return Boolean(
-      updatedUser.emailVerified ||
-        updatedUser.providerData.some((p) => p.providerId === 'google.com')
-    );
+    return Boolean(updatedUser);
   };
 
   const signOut = async () => {
@@ -256,7 +348,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       try {
         await firebaseUpdateProfile(auth.currentUser, {
           displayName: data.displayName ?? auth.currentUser.displayName,
-          photoURL: data.photoURL && data.photoURL.startsWith('http') ? data.photoURL : auth.currentUser.photoURL,
+          photoURL:
+            data.photoURL && data.photoURL.startsWith('http')
+              ? data.photoURL
+              : auth.currentUser.photoURL,
         });
       } catch (e) {
         console.warn('Could not update Firebase Auth user profile object:', e);
@@ -318,10 +413,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Equal permissions whether signed in via Google, Email OTP Link, or Email & Password
   const isVerifiedUser = Boolean(user);
 
-  const isMainAdmin =
-    Boolean(user?.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+  const isMainAdmin = Boolean(
+    user?.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()
+  );
 
   const isAdmin = Boolean(isMainAdmin || hasAdminDoc);
   const isCreator = Boolean(isMainAdmin);
@@ -335,9 +432,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isAdmin,
         isCreator,
         isVerifiedUser,
+        pendingEmailLinkPrompt,
+        emailLinkError,
         signInWithGoogle,
         signInWithEmail,
         signUpWithEmail,
+        sendEmailOtpLink,
+        completeEmailOtpLink,
+        dismissEmailLinkPrompt,
         sendPasswordReset,
         resendVerificationEmail,
         refreshAuthUser,

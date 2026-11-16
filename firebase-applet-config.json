@@ -1,12 +1,12 @@
 {
   "projectId": "obsidiuss",
-  "appId": "1:847132414474:web:b6c0de8a9cd638cef805f3",
+  "appId": "1:847132414474:web:5fab25d64be4d0f0f805f3",
   "apiKey": "AIzaSyA_XvpSyUY4sDsSdqBoNpUhLxXb7zZNLi8",
   "authDomain": "obsidiuss.firebaseapp.com",
   "firestoreDatabaseId": "(default)",
   "storageBucket": "obsidiuss.firebasestorage.app",
   "messagingSenderId": "847132414474",
-  "measurementId": "G-3F8K0X4EVL",
+  "measurementId": "G-LBP6N2S8NF",
   "oAuthClientId": "",
   "recaptchaSiteKey": ""
 }

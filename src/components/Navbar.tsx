@@ -131,7 +131,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 {item.label}
                 {active && (
-                  <span className="absolute inset-x-0 -bottom-[21px] h-[2.5px] bg-gradient-to-r from-blue-600 via-pink-500 to-orange-500 rounded-full" />
+                  <span className="absolute inset-x-0 -bottom-[21px] h-[2.5px] bg-blue-600 rounded-full" />
                 )}
               </a>
             );
@@ -143,7 +143,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             type="button"
             onClick={openSearch}
-            className="min-h-[38px] flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/80 hover:bg-blue-50 text-slate-600 hover:text-blue-700 border border-slate-200/80 text-xs font-semibold transition whitespace-nowrap shrink-0"
+            className="min-h-[38px] flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 text-xs font-semibold transition whitespace-nowrap shrink-0"
             title="Search hub (Cmd+K)"
           >
             <Search className="w-3.5 h-3.5 text-blue-600" />
@@ -161,13 +161,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                 setNotifOpen(!notifOpen);
                 setUserDropdownOpen(false);
               }}
-              className="relative min-h-[38px] min-w-[38px] flex items-center justify-center p-2 rounded-xl bg-slate-100/80 hover:bg-blue-50 text-slate-600 hover:text-blue-700 border border-slate-200/80 transition"
+              className="relative min-h-[38px] min-w-[38px] flex items-center justify-center p-2 rounded-xl bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 transition"
               title="Devlogs & Alerts"
               aria-label="Notifications"
             >
               <Bell className="w-4 h-4" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 text-white text-[10px] font-extrabold flex items-center justify-center shadow-sm">
+                <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 rounded-full bg-blue-600 text-white text-[10px] font-extrabold flex items-center justify-center shadow-xs">
                   {unreadCount}
                 </span>
               )}

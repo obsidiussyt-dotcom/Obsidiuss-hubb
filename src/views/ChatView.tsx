@@ -566,7 +566,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                                 displayName: msg.senderName,
                                 photoURL: msg.senderAvatar,
                                 role: msg.senderRole,
-                              });
+                              })
                             }
                             className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition"
                             title={`Direct message ${msg.senderName}`}

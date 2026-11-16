@@ -162,26 +162,26 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
   // Signed-in but unverified Email/Password state
   if (user && !isVerifiedUser) {
     return (
-      <div className="space-y-5">
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 space-y-2">
-          <div className="flex items-center gap-2 text-amber-300 font-bold text-sm">
+      <div className="space-y-5 animate-fade-up">
+        <div className="p-4 rounded-2xl bg-orange-50 border border-orange-200 space-y-2">
+          <div className="flex items-center gap-2 text-orange-700 font-bold text-sm">
             <ShieldCheck className="w-4 h-4 shrink-0" />
             <span>Verify Your Email Address</span>
           </div>
-          <p className="text-xs text-zinc-300 leading-relaxed">
-            You are signed in as <span className="text-white font-semibold">{user.email}</span>.
+          <p className="text-xs text-slate-700 leading-relaxed">
+            You are signed in as <span className="text-slate-950 font-semibold">{user.email}</span>.
             Click the verification link sent to your inbox to unlock Live Chat, Direct Messages,
             Reels, and Community posting.
           </p>
         </div>
 
         {infoMsg && (
-          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-300">
+          <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-800">
             {infoMsg}
           </div>
         )}
         {errorMsg && (
-          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-xs text-rose-300">
+          <div className="p-3 rounded-xl bg-pink-50 border border-pink-200 text-xs text-pink-800">
             {errorMsg}
           </div>
         )}
@@ -191,7 +191,7 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
             type="button"
             onClick={handleCheckVerified}
             disabled={submitting}
-            className="flex-1 min-h-[44px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 text-xs font-bold transition disabled:opacity-50"
+            className="flex-1 min-h-[44px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-xs font-bold shadow-md shadow-blue-600/20 transition disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${submitting ? 'animate-spin' : ''}`} />
             <span>I Verified — Refresh</span>
@@ -200,7 +200,7 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
             type="button"
             onClick={handleResendVerification}
             disabled={submitting}
-            className="flex-1 min-h-[44px] py-3 px-4 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 text-zinc-200 text-xs font-semibold transition disabled:opacity-50"
+            className="flex-1 min-h-[44px] py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 text-xs font-semibold transition disabled:opacity-50"
           >
             Resend Link
           </button>
@@ -209,7 +209,7 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
         <button
           type="button"
           onClick={() => signOut()}
-          className="w-full py-2 text-xs font-semibold text-zinc-400 hover:text-white transition"
+          className="w-full py-2 text-xs font-semibold text-slate-500 hover:text-blue-600 transition"
         >
           Use a different email or Google account
         </button>
@@ -220,7 +220,7 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
   return (
     <div className={compact ? 'space-y-4' : 'space-y-5'}>
       {/* Mode Switcher */}
-      <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/10">
+      <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-slate-100 border border-slate-200/70">
         <button
           type="button"
           onClick={() => {
@@ -228,10 +228,10 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
             setErrorMsg(null);
             setInfoMsg(null);
           }}
-          className={`min-h-[40px] py-2 px-2 sm:px-3 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
+          className={`min-h-[40px] py-2 px-2 sm:px-3 rounded-xl text-xs font-bold transition whitespace-nowrap ${
             mode === 'signin'
-              ? 'bg-white text-zinc-950 shadow-sm'
-              : 'text-zinc-400 hover:text-white'
+              ? 'bg-white text-blue-600 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           Sign In
@@ -243,10 +243,10 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
             setErrorMsg(null);
             setInfoMsg(null);
           }}
-          className={`min-h-[40px] py-2 px-2 sm:px-3 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
+          className={`min-h-[40px] py-2 px-2 sm:px-3 rounded-xl text-xs font-bold transition whitespace-nowrap ${
             mode === 'signup'
-              ? 'bg-white text-zinc-950 shadow-sm'
-              : 'text-zinc-400 hover:text-white'
+              ? 'bg-white text-blue-600 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           Register
@@ -258,10 +258,10 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
             setErrorMsg(null);
             setInfoMsg(null);
           }}
-          className={`min-h-[40px] py-2 px-2 sm:px-3 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
+          className={`min-h-[40px] py-2 px-2 sm:px-3 rounded-xl text-xs font-bold transition whitespace-nowrap ${
             mode === 'reset'
-              ? 'bg-white text-zinc-950 shadow-sm'
-              : 'text-zinc-400 hover:text-white'
+              ? 'bg-white text-blue-600 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           Reset
@@ -275,7 +275,7 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
             type="button"
             onClick={handleGoogle}
             disabled={submitting}
-            className="w-full min-h-[46px] flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-white text-zinc-950 hover:bg-zinc-100 font-bold text-sm shadow-lg transition active:scale-[0.99] disabled:opacity-50"
+            className="w-full min-h-[46px] flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 hover:border-blue-300 font-bold text-sm shadow-sm transition active:scale-[0.99] disabled:opacity-50"
           >
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
               <path
@@ -299,11 +299,11 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
           </button>
 
           <div className="relative flex items-center justify-center">
-            <div className="w-full border-t border-white/10" />
-            <span className="px-3 text-[11px] font-medium text-zinc-500 bg-[#0b0c14] whitespace-nowrap">
+            <div className="w-full border-t border-slate-200" />
+            <span className="px-3 text-[11px] font-medium text-slate-400 bg-white whitespace-nowrap">
               or continue with email
             </span>
-            <div className="w-full border-t border-white/10" />
+            <div className="w-full border-t border-slate-200" />
           </div>
         </>
       )}
@@ -311,12 +311,12 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
       {/* Email / Password Form */}
       <form onSubmit={handleSubmit} className="space-y-3.5">
         {mode === 'signup' && (
-          <div>
-            <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+          <div className="animate-fade-up">
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               Username
             </label>
             <div className="relative">
-              <UserIcon className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={displayName}
@@ -324,18 +324,18 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
                 placeholder="Choose a community name"
                 maxLength={80}
                 required
-                className="w-full min-h-[44px] pl-10 pr-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-cyan-400 transition"
+                className="w-full min-h-[44px] pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition"
               />
             </div>
           </div>
         )}
 
         <div>
-          <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
             Email Address
           </label>
           <div className="relative">
-            <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="email"
               value={email}
@@ -343,7 +343,7 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
               placeholder="name@domain.com"
               required
               autoComplete="email"
-              className="w-full min-h-[44px] pl-10 pr-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-cyan-400 transition"
+              className="w-full min-h-[44px] pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition"
             />
           </div>
         </div>
@@ -351,7 +351,7 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
         {mode !== 'reset' && (
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-semibold text-zinc-300">Password</label>
+              <label className="block text-xs font-semibold text-slate-700">Password</label>
               {mode === 'signin' && (
                 <button
                   type="button"
@@ -359,14 +359,14 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
                     setMode('reset');
                     setErrorMsg(null);
                   }}
-                  className="text-xs text-cyan-400 hover:text-cyan-300 font-medium"
+                  className="text-xs text-blue-600 hover:text-blue-700 font-semibold"
                 >
                   Forgot password?
                 </button>
               )}
             </div>
             <div className="relative">
-              <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
@@ -375,12 +375,12 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
                 required
                 minLength={6}
                 autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                className="w-full min-h-[44px] pl-10 pr-11 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-cyan-400 transition"
+                className="w-full min-h-[44px] pl-10 pr-11 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-2"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-2"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -390,15 +390,15 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
         )}
 
         {errorMsg && (
-          <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-xs text-rose-300">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2 p-3 rounded-xl bg-pink-50 border border-pink-200 text-xs text-pink-800">
+            <AlertCircle className="w-4 h-4 text-pink-600 shrink-0 mt-0.5" />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {infoMsg && (
-          <div className="flex items-start gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-300">
-            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2 p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-800">
+            <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
             <span>{infoMsg}</span>
           </div>
         )}
@@ -406,7 +406,7 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
         <button
           type="submit"
           disabled={submitting}
-          className="w-full min-h-[46px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-sm shadow-lg shadow-indigo-950/50 transition active:scale-[0.99] disabled:opacity-50"
+          className="w-full min-h-[46px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 text-white font-bold text-sm shadow-lg shadow-blue-600/25 transition active:scale-[0.99] disabled:opacity-50"
         >
           <span>
             {submitting
@@ -422,14 +422,14 @@ export const AuthExperience: React.FC<AuthExperienceProps> = ({
       </form>
 
       {onOpenRules && (
-        <div className="pt-3 text-center border-t border-white/10">
+        <div className="pt-3 text-center border-t border-slate-100">
           <button
             type="button"
             onClick={onOpenRules}
-            className="inline-flex items-center gap-1.5 text-[11px] text-zinc-400 hover:text-white transition"
+            className="inline-flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-blue-600 font-medium transition"
           >
-            <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Community & User Guidelines</span>
+            <BookOpen className="w-3.5 h-3.5 text-orange-500" />
+            <span>Community &amp; User Guidelines</span>
           </button>
         </div>
       )}

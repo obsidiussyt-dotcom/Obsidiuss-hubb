@@ -24,22 +24,22 @@ export const AboutView: React.FC<AboutViewProps> = ({ onNavigate, onOpenRules })
   const totalDownloads = resources.reduce((acc, r) => acc + (r.downloadsCount || 0), 0);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-12">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-12 animate-fade-up">
       {/* Header */}
       <div className="space-y-3 text-center max-w-2xl mx-auto">
-        <p className="text-xs font-semibold tracking-wider uppercase text-cyan-400">
+        <p className="text-xs font-semibold tracking-wider uppercase text-blue-600">
           Owner &amp; Creator Profile
         </p>
-        <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight [text-wrap:balance]">
-          Bhaskar Yadav <span className="text-purple-400">(Obsidiuss)</span>
+        <h1 className="font-display text-3xl sm:text-5xl font-black text-slate-950 tracking-tight [text-wrap:balance]">
+          Bhaskar Yadav <span className="text-blue-600">(Obsidiuss)</span>
         </h1>
-        <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
+        <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
           Founder, owner, and developer of OBSIDIUSS HUB.
         </p>
       </div>
 
       {/* Creator Card */}
-      <div className="rounded-3xl glass-panel border border-white/10 p-6 sm:p-10 bg-gradient-to-br from-purple-950/20 via-[#0d0e17] to-zinc-900/60">
+      <div className="rounded-3xl glass-panel p-6 sm:p-10 bg-gradient-to-br from-white via-blue-50/40 to-pink-50/30">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-7 text-center md:text-left">
           <div className="shrink-0">
             <BrandLogo size={108} />
@@ -47,13 +47,13 @@ export const AboutView: React.FC<AboutViewProps> = ({ onNavigate, onOpenRules })
 
           <div className="space-y-4">
             <div>
-              <h2 className="text-2xl font-black text-white">Bhaskar Yadav</h2>
-              <p className="text-xs font-mono text-cyan-400 uppercase tracking-wider font-semibold mt-0.5">
+              <h2 className="font-display text-2xl font-black text-slate-950">Bhaskar Yadav</h2>
+              <p className="text-xs font-mono text-blue-600 uppercase tracking-wider font-semibold mt-0.5">
                 Handle: Obsidiuss · Owner &amp; Creator
               </p>
             </div>
 
-            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed max-w-2xl">
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl">
               Creator behind OBSIDIUSS HUB — building Minecraft mods and clients, Android tools,
               desktop software, and open-source code shared directly with the community without
               paywalls or ad-link redirects.
@@ -64,7 +64,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ onNavigate, onOpenRules })
                 href="https://youtube.com/@obsidiuss?feature=shared"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="min-h-[42px] flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600/10 hover:bg-red-600/20 border border-red-600/30 text-red-400 text-xs font-semibold transition"
+                className="min-h-[42px] flex items-center gap-2 px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-xs font-semibold transition"
               >
                 <Youtube className="w-4 h-4" />
                 <span>YouTube (@obsidiuss)</span>
@@ -74,7 +74,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ onNavigate, onOpenRules })
                 href="https://discord.com/invite/aAgf7bnCNd"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="min-h-[42px] flex items-center gap-2 px-4 py-2 rounded-xl bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/30 text-[#9da5ff] text-xs font-semibold transition"
+                className="min-h-[42px] flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-semibold transition"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>Discord</span>
@@ -84,7 +84,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ onNavigate, onOpenRules })
                 href="https://www.instagram.com/obsidiuss.yt?mdxt=MWJ1aXcyNWFpeXQ2bA=="
                 target="_blank"
                 rel="noopener noreferrer"
-                className="min-h-[42px] flex items-center gap-2 px-4 py-2 rounded-xl bg-pink-600/10 hover:bg-pink-600/20 border border-pink-600/30 text-pink-400 text-xs font-semibold transition"
+                className="min-h-[42px] flex items-center gap-2 px-4 py-2 rounded-xl bg-pink-50 hover:bg-pink-100 border border-pink-200 text-pink-600 text-xs font-semibold transition"
               >
                 <Instagram className="w-4 h-4" />
                 <span>Instagram (@obsidiuss.yt)</span>
@@ -102,13 +102,13 @@ export const AboutView: React.FC<AboutViewProps> = ({ onNavigate, onOpenRules })
             e.preventDefault();
             onNavigate?.('resources');
           }}
-          className="p-5 rounded-2xl glass-panel glass-panel-hover border border-white/5 text-center space-y-1 block"
+          className="p-5 rounded-2xl glass-panel glass-panel-hover text-center space-y-1 block"
         >
-          <Download className="w-5 h-5 text-purple-400 mx-auto" />
-          <div className="text-2xl font-black text-white font-mono tabular-nums">
+          <Download className="w-5 h-5 text-blue-600 mx-auto" />
+          <div className="font-display text-2xl font-black text-slate-950 font-mono tabular-nums">
             {totalDownloads.toLocaleString()}
           </div>
-          <p className="text-[11px] text-zinc-400">Total Downloads</p>
+          <p className="text-[11px] text-slate-500 font-medium">Total Downloads</p>
         </a>
 
         <a
@@ -117,13 +117,13 @@ export const AboutView: React.FC<AboutViewProps> = ({ onNavigate, onOpenRules })
             e.preventDefault();
             onNavigate?.('resources');
           }}
-          className="p-5 rounded-2xl glass-panel glass-panel-hover border border-white/5 text-center space-y-1 block"
+          className="p-5 rounded-2xl glass-panel glass-panel-hover text-center space-y-1 block"
         >
-          <Zap className="w-5 h-5 text-cyan-400 mx-auto" />
-          <div className="text-2xl font-black text-white font-mono tabular-nums">
+          <Zap className="w-5 h-5 text-orange-500 mx-auto" />
+          <div className="font-display text-2xl font-black text-slate-950 font-mono tabular-nums">
             {resources.length}
           </div>
-          <p className="text-[11px] text-zinc-400">Packages</p>
+          <p className="text-[11px] text-slate-500 font-medium">Packages</p>
         </a>
 
         <a
@@ -132,13 +132,13 @@ export const AboutView: React.FC<AboutViewProps> = ({ onNavigate, onOpenRules })
             e.preventDefault();
             onNavigate?.('projects');
           }}
-          className="p-5 rounded-2xl glass-panel glass-panel-hover border border-white/5 text-center space-y-1 block"
+          className="p-5 rounded-2xl glass-panel glass-panel-hover text-center space-y-1 block"
         >
-          <FolderGit2 className="w-5 h-5 text-indigo-400 mx-auto" />
-          <div className="text-2xl font-black text-white font-mono tabular-nums">
+          <FolderGit2 className="w-5 h-5 text-sky-600 mx-auto" />
+          <div className="font-display text-2xl font-black text-slate-950 font-mono tabular-nums">
             {projects.length}
           </div>
-          <p className="text-[11px] text-zinc-400">Projects</p>
+          <p className="text-[11px] text-slate-500 font-medium">Projects</p>
         </a>
 
         <a
@@ -147,21 +147,21 @@ export const AboutView: React.FC<AboutViewProps> = ({ onNavigate, onOpenRules })
             e.preventDefault();
             onNavigate?.('community');
           }}
-          className="p-5 rounded-2xl glass-panel glass-panel-hover border border-white/5 text-center space-y-1 block"
+          className="p-5 rounded-2xl glass-panel glass-panel-hover text-center space-y-1 block"
         >
-          <Users className="w-5 h-5 text-emerald-400 mx-auto" />
-          <div className="text-2xl font-black text-white font-mono tabular-nums">
+          <Users className="w-5 h-5 text-pink-500 mx-auto" />
+          <div className="font-display text-2xl font-black text-slate-950 font-mono tabular-nums">
             {discussions.length}
           </div>
-          <p className="text-[11px] text-zinc-400">Forum Threads</p>
+          <p className="text-[11px] text-slate-500 font-medium">Forum Threads</p>
         </a>
       </div>
 
       {/* Direct Actions */}
-      <div className="p-6 rounded-3xl glass-panel border border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="p-6 rounded-3xl glass-panel flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h3 className="text-base font-bold text-white">Get in Touch</h3>
-          <p className="text-xs text-zinc-400">
+          <h3 className="text-base font-bold text-slate-950">Get in Touch</h3>
+          <p className="text-xs text-slate-600">
             Message Bhaskar Yadav directly or review community rules.
           </p>
         </div>
@@ -169,7 +169,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ onNavigate, onOpenRules })
           <button
             type="button"
             onClick={() => onNavigate?.('contact')}
-            className="min-h-[42px] flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold transition"
+            className="min-h-[42px] flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 text-white text-xs font-bold shadow-sm transition"
           >
             <Mail className="w-3.5 h-3.5" />
             <span>Contact Form</span>
@@ -178,9 +178,9 @@ export const AboutView: React.FC<AboutViewProps> = ({ onNavigate, onOpenRules })
             <button
               type="button"
               onClick={onOpenRules}
-              className="min-h-[42px] flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-200 text-xs font-semibold transition"
+              className="min-h-[42px] flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 text-xs font-semibold transition"
             >
-              <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+              <BookOpen className="w-3.5 h-3.5 text-pink-500" />
               <span>Community Rules</span>
             </button>
           )}

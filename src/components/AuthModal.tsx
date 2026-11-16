@@ -20,22 +20,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/55 backdrop-blur-md"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-md rounded-3xl border border-white/10 shadow-2xl bg-[#0b0c14] text-zinc-200 overflow-hidden max-h-[92dvh] overflow-y-auto"
+        className="animate-modal-pop relative w-full max-w-md rounded-3xl border border-slate-200 shadow-2xl shadow-blue-950/20 bg-white text-slate-900 overflow-hidden max-h-[92dvh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top gradient accent bar */}
-        <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400" />
+        <div className="h-1.5 w-full bg-gradient-to-r from-blue-600 via-pink-500 to-orange-500" />
 
         {/* Header */}
-        <div className="p-5 sm:p-6 border-b border-white/10 relative">
+        <div className="p-5 sm:p-6 border-b border-slate-100 relative">
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-4 right-4 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition"
+            className="absolute top-4 right-4 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900 transition"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
@@ -43,8 +43,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <div className="flex items-center gap-3">
             <BrandLogo size={42} />
             <div>
-              <h3 className="text-lg font-extrabold text-white">OBSIDIUSS HUB</h3>
-              <p className="text-xs text-zinc-400">By Bhaskar Yadav (Obsidiuss)</p>
+              <h3 className="font-display text-lg font-extrabold text-slate-950">OBSIDIUSS HUB</h3>
+              <p className="text-xs text-slate-500">By Bhaskar Yadav (Obsidiuss)</p>
             </div>
           </div>
         </div>
@@ -68,7 +68,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   onClose();
                   onOpenFullPage();
                 }}
-                className="inline-flex items-center gap-1 text-[11px] font-semibold text-zinc-500 hover:text-cyan-300 transition"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-blue-600 transition"
               >
                 <span>Open dedicated Sign-In page</span>
                 <ArrowUpRight className="w-3 h-3" />

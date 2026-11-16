@@ -58,7 +58,6 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
   const [confirmDeleteReviewId, setConfirmDeleteReviewId] = useState<string | null>(null);
   const [deletingReview, setDeletingReview] = useState(false);
 
-  // Sync live resource data so downloadsCount and rating update immediately
   const liveResource = resource
     ? resources.find((r) => r.id === resource.id) || resource
     : null;
@@ -99,7 +98,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
         particleCount: 80,
         spread: 60,
         origin: { y: 0.7 },
-        colors: ['#8b5cf6', '#6366f1', '#06b6d4', '#ffffff'],
+        colors: ['#2563eb', '#0ea5e9', '#ec4899', '#f97316', '#ffffff'],
       });
 
       await incrementDownload(liveResource.id);
@@ -138,7 +137,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
 
   const handleBookmarkClick = async () => {
     if (!profile) {
-      showToast('Sign in with Google to bookmark resources.', 'info');
+      showToast('Sign in to bookmark resources.', 'info');
       openAuth?.();
       return;
     }
@@ -193,31 +192,31 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto glass-panel rounded-3xl border border-white/10 shadow-2xl bg-[#0c0d15] text-zinc-200"
+        className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-200 shadow-2xl bg-white text-slate-800 animate-modal-pop"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header Banner & Close */}
-        <div className="relative h-56 sm:h-64 w-full overflow-hidden rounded-t-3xl bg-zinc-900">
+        {/* Header Banner & Close (intentional dark scrim over media for contrast) */}
+        <div className="relative h-56 sm:h-64 w-full overflow-hidden rounded-t-3xl bg-slate-900">
           {liveResource.thumbnailUrl ? (
             <img
               src={liveResource.thumbnailUrl}
               alt={liveResource.title}
-              className="w-full h-full object-cover opacity-65 filter brightness-90 contrast-110"
+              className="w-full h-full object-cover opacity-75"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-purple-950/60 via-[#0d0e17] to-indigo-950/60 flex items-center justify-center">
-              <Layers className="w-16 h-16 text-purple-500/30" />
+            <div className="w-full h-full bg-gradient-to-br from-blue-700 via-sky-600 to-pink-600 flex items-center justify-center">
+              <Layers className="w-16 h-16 text-white/40" />
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0c0d15] via-[#0c0d15]/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent" />
 
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-full bg-black/60 hover:bg-black/80 text-zinc-300 hover:text-white border border-white/10 backdrop-blur-md transition"
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/90 hover:bg-white text-slate-800 shadow-md transition"
             aria-label="Close dialog"
           >
             <X className="w-5 h-5" />
@@ -232,25 +231,23 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                     onClose();
                     onNavigate?.('resources', { category: liveResource.category });
                   }}
-                  className="font-bold uppercase tracking-wider text-purple-300 hover:text-purple-200 transition"
+                  className="px-2 py-0.5 rounded-md bg-blue-600/90 text-white font-bold uppercase tracking-wider hover:bg-blue-500 transition"
                   title={`Browse all ${liveResource.category} resources`}
                 >
                   {liveResource.category}
                 </button>
-                <span className="text-zinc-600">·</span>
-                <span className="font-semibold text-zinc-200">
-                  {liveResource.version}
-                </span>
+                <span className="text-white/60">·</span>
+                <span className="font-semibold text-white/90">{liveResource.version}</span>
                 {liveResource.featured && (
                   <>
-                    <span className="text-zinc-600">·</span>
-                    <span className="flex items-center gap-1 font-bold text-amber-300">
-                      <Sparkles className="w-3 h-3 text-amber-400" /> Featured
+                    <span className="text-white/60">·</span>
+                    <span className="flex items-center gap-1 font-bold text-orange-300">
+                      <Sparkles className="w-3 h-3 text-orange-400" /> Featured
                     </span>
                   </>
                 )}
               </div>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-white leading-tight">
+              <h2 className="font-display text-xl sm:text-2xl font-extrabold text-white leading-tight">
                 {liveResource.title}
               </h2>
             </div>
@@ -258,22 +255,22 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
         </div>
 
         {/* Action Bar */}
-        <div className="px-6 py-4 border-b border-white/5 flex flex-wrap items-center justify-between gap-4 bg-white/[0.01]">
-          <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-400">
+        <div className="px-6 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4 bg-slate-50/70">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600">
             <div className="flex items-center gap-1.5">
-              <Download className="w-4 h-4 text-purple-400" />
-              <span className="font-semibold text-zinc-200 font-mono">
+              <Download className="w-4 h-4 text-blue-600" />
+              <span className="font-semibold text-slate-950 font-mono">
                 {(liveResource.downloadsCount || 0).toLocaleString()}
               </span>
               <span>downloads</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <HardDrive className="w-4 h-4 text-cyan-400" />
-              <span className="font-semibold text-zinc-200 font-mono">{liveResource.fileSize}</span>
+              <HardDrive className="w-4 h-4 text-sky-600" />
+              <span className="font-semibold text-slate-950 font-mono">{liveResource.fileSize}</span>
             </div>
-            <div className="flex items-center gap-1 text-amber-400">
+            <div className="flex items-center gap-1 text-orange-500">
               <Star className="w-3.5 h-3.5 fill-current" />
-              <span className="font-bold text-white font-mono">
+              <span className="font-bold text-slate-950 font-mono">
                 {liveResource.ratingCount && liveResource.ratingCount > 0
                   ? `${liveResource.rating.toFixed(1)} (${liveResource.ratingCount})`
                   : 'Unrated'}
@@ -286,8 +283,8 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
               onClick={handleBookmarkClick}
               className={`p-2.5 rounded-xl border transition ${
                 isBookmarked
-                  ? 'bg-purple-600/30 border-purple-500/50 text-purple-300'
-                  : 'bg-white/5 border-white/10 text-zinc-400 hover:text-white hover:bg-white/10'
+                  ? 'bg-pink-50 border-pink-300 text-pink-600'
+                  : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-100'
               }`}
               title={isBookmarked ? 'Remove bookmark' : 'Save bookmark'}
             >
@@ -296,7 +293,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
 
             <button
               onClick={handleShare}
-              className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 transition"
+              className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition"
               title="Share resource"
             >
               <Share2 className="w-4 h-4" />
@@ -304,7 +301,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
 
             <button
               onClick={() => onOpenReport(liveResource.id, liveResource.title)}
-              className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition"
+              className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-500 hover:text-pink-600 hover:bg-pink-50 transition"
               title="Report issue"
             >
               <Flag className="w-4 h-4" />
@@ -313,7 +310,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
             <button
               onClick={() => handleDownload(false)}
               disabled={isDownloading}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white text-xs font-bold shadow-lg shadow-purple-900/40 transition active:scale-95 disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-sky-500 to-blue-600 hover:from-blue-700 hover:to-sky-600 text-white text-xs font-bold shadow-md shadow-blue-600/20 transition active:scale-95 disabled:opacity-50"
             >
               <Download className={`w-4 h-4 ${isDownloading ? 'animate-bounce' : ''}`} />
               <span>{isDownloading ? 'Starting...' : 'Direct Download'}</span>
@@ -323,15 +320,15 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
 
         {/* Content Tabs */}
         <div className="px-6 pt-4">
-          <div className="flex items-center gap-2 border-b border-white/10 pb-3 overflow-x-auto">
+          <div className="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto">
             {(['overview', 'changelog', 'install', 'reviews'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition whitespace-nowrap ${
                   activeTab === tab
-                    ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30'
-                    : 'text-zinc-400 hover:text-white'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
                 }`}
               >
                 {tab === 'overview' && 'Overview'}
@@ -348,17 +345,17 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
           {activeTab === 'overview' && (
             <div className="space-y-5">
               <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
                   Description
                 </h4>
-                <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-line">
+                <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
                   {liveResource.description}
                 </p>
               </div>
 
               {liveResource.tags?.length > 0 && (
                 <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
                     Tags & Compatibility
                   </h4>
                   <div className="flex flex-wrap gap-1.5">
@@ -370,7 +367,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                           onClose();
                           onNavigate?.('resources', { search: tag });
                         }}
-                        className="px-2.5 py-1 rounded-lg text-xs bg-white/[0.04] hover:bg-purple-500/20 text-zinc-300 hover:text-purple-200 border border-white/5 hover:border-purple-500/30 transition"
+                        className="px-2.5 py-1 rounded-lg text-xs bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-200 transition"
                       >
                         #{tag}
                       </button>
@@ -379,36 +376,33 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                 </div>
               )}
 
-              {/* Release Publisher & Date */}
-              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-400">
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
                 <div className="flex items-center gap-2">
-                  <UserIcon className="w-4 h-4 text-purple-400" />
+                  <UserIcon className="w-4 h-4 text-blue-600" />
                   <span>
-                    Published by <strong className="text-white">{liveResource.authorName}</strong>
+                    Published by <strong className="text-slate-950">{liveResource.authorName}</strong>
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-cyan-400" />
-                  <span>
-                    Released {new Date(liveResource.createdAt).toLocaleDateString()}
-                  </span>
+                  <Calendar className="w-4 h-4 text-pink-500" />
+                  <span>Released {new Date(liveResource.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
 
               {liveResource.mirrorUrl && (
-                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-between gap-4">
+                <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold text-white">Alternative Mirror Download</p>
-                    <p className="text-[11px] text-zinc-400">
+                    <p className="text-xs font-bold text-slate-950">Alternative Mirror Download</p>
+                    <p className="text-[11px] text-slate-600">
                       Backup download link provided by the creator.
                     </p>
                   </div>
                   <button
                     onClick={() => handleDownload(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white transition shrink-0"
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-blue-600 border border-blue-200 hover:border-blue-600 text-xs font-semibold text-blue-700 hover:text-white transition shrink-0"
                   >
                     <span>Mirror Link</span>
-                    <ExternalLink className="w-3 h-3 text-zinc-400" />
+                    <ExternalLink className="w-3 h-3" />
                   </button>
                 </div>
               )}
@@ -418,14 +412,14 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
           {activeTab === 'changelog' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                   Version History & Release Notes
                 </h4>
-                <span className="text-xs text-purple-400 font-mono font-semibold">
+                <span className="text-xs text-blue-600 font-mono font-semibold">
                   {liveResource.version}
                 </span>
               </div>
-              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 font-mono text-xs text-zinc-300 whitespace-pre-line leading-relaxed">
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 font-mono text-xs text-slate-700 whitespace-pre-line leading-relaxed">
                 {liveResource.changelog || 'No changelog notes added for this release yet.'}
               </div>
             </div>
@@ -433,16 +427,16 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
 
           {activeTab === 'install' && (
             <div className="space-y-4">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Requirements & Installation Notes
               </h4>
-              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 text-xs text-zinc-300 space-y-3 leading-relaxed">
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-3 leading-relaxed">
                 <p>
-                  <strong>System Requirements:</strong>{' '}
+                  <strong className="text-slate-950">System Requirements:</strong>{' '}
                   {liveResource.requirements || 'No specific system requirements specified.'}
                 </p>
                 <p>
-                  <strong>Need Help?</strong> Ask a question in{' '}
+                  <strong className="text-slate-950">Need Help?</strong> Ask a question in{' '}
                   <a
                     href="/community"
                     onClick={(e) => {
@@ -450,7 +444,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                       onClose();
                       onNavigate?.('community');
                     }}
-                    className="text-purple-400 hover:text-purple-300 underline font-semibold"
+                    className="text-blue-600 hover:text-blue-800 underline font-semibold"
                   >
                     Community Discussions
                   </a>{' '}
@@ -462,7 +456,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                       onClose();
                       onNavigate?.('contact');
                     }}
-                    className="text-cyan-400 hover:text-cyan-300 underline font-semibold"
+                    className="text-pink-600 hover:text-pink-700 underline font-semibold"
                   >
                     Contact & Feedback
                   </a>.
@@ -474,22 +468,22 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
           {activeTab === 'reviews' && (
             <div className="space-y-6">
               {/* Rating Summary & Breakdown */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 grid grid-cols-1 sm:grid-cols-12 gap-5 items-center">
-                <div className="sm:col-span-4 text-center sm:text-left sm:border-r border-white/5 sm:pr-4">
-                  <div className="text-4xl font-black text-white font-mono tabular-nums">
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-5 items-center">
+                <div className="sm:col-span-4 text-center sm:text-left sm:border-r border-slate-200 sm:pr-4">
+                  <div className="font-display text-4xl font-black text-slate-950 font-mono tabular-nums">
                     {ratings.length > 0 ? avgStars.toFixed(1) : '—'}
                   </div>
-                  <div className="flex items-center justify-center sm:justify-start gap-1 text-amber-400 my-1.5">
+                  <div className="flex items-center justify-center sm:justify-start gap-1 text-orange-500 my-1.5">
                     {[1, 2, 3, 4, 5].map((s) => (
                       <Star
                         key={s}
                         className={`w-4 h-4 ${
-                          s <= Math.round(avgStars) ? 'fill-current' : 'text-zinc-700'
+                          s <= Math.round(avgStars) ? 'fill-current' : 'text-slate-300'
                         }`}
                       />
                     ))}
                   </div>
-                  <p className="text-[11px] text-zinc-400 font-mono">
+                  <p className="text-[11px] text-slate-500 font-mono">
                     {ratings.length} {ratings.length === 1 ? 'review' : 'reviews'}
                   </p>
                 </div>
@@ -500,17 +494,17 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                     const pct = ratings.length > 0 ? Math.round((count / ratings.length) * 100) : 0;
                     return (
                       <div key={starVal} className="flex items-center gap-2.5 text-[11px] font-mono">
-                        <span className="w-8 text-zinc-400 flex items-center gap-0.5 shrink-0">
+                        <span className="w-8 text-slate-600 flex items-center gap-0.5 shrink-0">
                           {starVal}
-                          <Star className="w-3 h-3 text-amber-400 fill-current" />
+                          <Star className="w-3 h-3 text-orange-500 fill-current" />
                         </span>
-                        <div className="flex-1 h-2 rounded-full bg-white/5 overflow-hidden">
+                        <div className="flex-1 h-2 rounded-full bg-slate-200 overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-300"
+                            className="h-full rounded-full bg-gradient-to-r from-orange-500 to-pink-500 transition-all duration-300"
                             style={{ width: `${pct}%` }}
                           />
                         </div>
-                        <span className="w-8 text-right text-zinc-500">{count}</span>
+                        <span className="w-8 text-right text-slate-500">{count}</span>
                       </div>
                     );
                   })}
@@ -520,11 +514,11 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
               {/* Rate & Review Form */}
               <form
                 onSubmit={handleRateSubmit}
-                className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3"
+                className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <MessageSquare className="w-3.5 h-3.5 text-purple-400" />
+                  <span className="text-xs font-bold text-slate-950 flex items-center gap-1.5">
+                    <MessageSquare className="w-3.5 h-3.5 text-blue-600" />
                     <span>{myExistingReview ? 'Update Your Review' : 'Rate & Review This Resource'}</span>
                   </span>
                   <div className="flex items-center gap-1.5">
@@ -540,14 +534,14 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                           <Star
                             className={`w-4 h-4 transition ${
                               star <= userStars
-                                ? 'text-amber-400 fill-current'
-                                : 'text-zinc-600 hover:text-amber-300'
+                                ? 'text-orange-500 fill-current'
+                                : 'text-slate-300 hover:text-orange-400'
                             }`}
                           />
                         </button>
                       ))}
                     </div>
-                    <span className="text-[11px] font-mono text-amber-300 font-semibold ml-1">
+                    <span className="text-[11px] font-mono text-orange-600 font-semibold ml-1">
                       {userStars}/5
                     </span>
                   </div>
@@ -562,13 +556,13 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                     placeholder={
                       profile
                         ? 'Share your experience, performance notes, or feedback (optional)...'
-                        : 'Sign in with Google to leave a rating and review.'
+                        : 'Sign in to leave a rating and review.'
                     }
                     disabled={!profile}
-                    className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-purple-500 resize-none disabled:opacity-60"
+                    className="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 resize-none disabled:opacity-60"
                   />
                   {profile && (
-                    <div className="flex justify-end text-[10px] font-mono text-zinc-500 mt-1">
+                    <div className="flex justify-end text-[10px] font-mono text-slate-400 mt-1">
                       {reviewText.length}/500
                     </div>
                   )}
@@ -580,7 +574,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                       type="button"
                       disabled={deletingReview}
                       onClick={() => handleDeleteReview(myExistingReview.userId)}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold transition disabled:opacity-50"
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold transition disabled:opacity-50"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       <span>Delete My Review</span>
@@ -593,7 +587,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                     <button
                       type="submit"
                       disabled={submittingRating}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition disabled:opacity-50"
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition disabled:opacity-50"
                     >
                       <Send className="w-3.5 h-3.5" />
                       <span>
@@ -611,7 +605,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                         onClose();
                         openAuth?.();
                       }}
-                      className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition"
+                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition"
                     >
                       Sign In to Rate
                     </button>
@@ -621,7 +615,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
 
               {/* Ratings List */}
               {ratings.length === 0 ? (
-                <p className="text-xs text-zinc-500 text-center py-4">
+                <p className="text-xs text-slate-500 text-center py-4">
                   No community reviews yet. Be the first to rate this resource!
                 </p>
               ) : (
@@ -634,7 +628,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                     return (
                       <div
                         key={rat.id}
-                        className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2"
+                        className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-center gap-2.5">
@@ -642,20 +636,20 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                               src={rat.userAvatar}
                               name={rat.userName}
                               sizeClass="w-8 h-8 text-xs"
-                              className="rounded-xl ring-1 ring-white/10"
+                              className="rounded-xl ring-1 ring-slate-200"
                             />
                             <div>
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-xs font-bold text-white">
+                                <span className="text-xs font-bold text-slate-950">
                                   {rat.userName}
                                 </span>
                                 {isOwner && (
-                                  <span className="text-[10px] font-mono text-purple-300">
+                                  <span className="text-[10px] font-mono text-blue-600 font-semibold">
                                     (You)
                                   </span>
                                 )}
                               </div>
-                              <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-mono">
+                              <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-mono">
                                 <span>{new Date(rat.createdAt).toLocaleDateString()}</span>
                                 {isEdited && <span>· edited</span>}
                               </div>
@@ -663,12 +657,12 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                           </div>
 
                           <div className="flex items-center gap-2 shrink-0">
-                            <div className="flex items-center gap-0.5 text-amber-400">
+                            <div className="flex items-center gap-0.5 text-orange-500">
                               {[1, 2, 3, 4, 5].map((s) => (
                                 <Star
                                   key={s}
                                   className={`w-3 h-3 ${
-                                    s <= rat.stars ? 'fill-current' : 'text-zinc-700'
+                                    s <= rat.stars ? 'fill-current' : 'text-slate-300'
                                   }`}
                                 />
                               ))}
@@ -684,7 +678,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                                     'review'
                                   )
                                 }
-                                className="p-1 text-zinc-500 hover:text-rose-400 transition"
+                                className="p-1 text-slate-400 hover:text-pink-600 transition"
                                 title="Report review"
                               >
                                 <Flag className="w-3 h-3" />
@@ -693,19 +687,19 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
 
                             {canDelete && (
                               confirmDeleteReviewId === rat.userId ? (
-                                <div className="flex items-center gap-1 bg-rose-500/15 border border-rose-500/30 rounded-lg px-2 py-0.5">
+                                <div className="flex items-center gap-1 bg-rose-50 border border-rose-200 rounded-lg px-2 py-0.5">
                                   <button
                                     type="button"
                                     disabled={deletingReview}
                                     onClick={() => handleDeleteReview(rat.userId)}
-                                    className="text-[10px] font-bold text-rose-300 hover:text-white"
+                                    className="text-[10px] font-bold text-rose-600 hover:text-rose-800"
                                   >
                                     Delete
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => setConfirmDeleteReviewId(null)}
-                                    className="text-[10px] text-zinc-400 hover:text-white ml-1"
+                                    className="text-[10px] text-slate-500 hover:text-slate-900 ml-1"
                                   >
                                     Cancel
                                   </button>
@@ -714,7 +708,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                                 <button
                                   type="button"
                                   onClick={() => setConfirmDeleteReviewId(rat.userId)}
-                                  className="p-1 text-zinc-500 hover:text-rose-400 transition"
+                                  className="p-1 text-slate-400 hover:text-rose-600 transition"
                                   title={
                                     isAdmin && !isOwner
                                       ? 'Moderate: Delete review'
@@ -722,7 +716,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                                   }
                                 >
                                   {isAdmin && !isOwner ? (
-                                    <Shield className="w-3.5 h-3.5 text-amber-400 hover:text-rose-400" />
+                                    <Shield className="w-3.5 h-3.5 text-orange-500 hover:text-rose-600" />
                                   ) : (
                                     <Trash2 className="w-3.5 h-3.5" />
                                   )}
@@ -733,7 +727,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                         </div>
 
                         {rat.review && (
-                          <p className="text-xs text-zinc-300 leading-relaxed pl-10 whitespace-pre-line">
+                          <p className="text-xs text-slate-700 leading-relaxed pl-10 whitespace-pre-line">
                             {rat.review}
                           </p>
                         )}

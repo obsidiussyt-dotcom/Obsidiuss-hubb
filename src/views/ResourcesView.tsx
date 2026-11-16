@@ -112,7 +112,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
   const handleBookmarkToggle = async (e: React.MouseEvent, resourceId: string) => {
     e.stopPropagation();
     if (!profile) {
-      showToast('Sign in with Google to bookmark resources.', 'info');
+      showToast('Sign in to bookmark resources.', 'info');
       openAuth?.();
       return;
     }
@@ -121,19 +121,19 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 animate-fade-up">
       {/* Header Banner */}
       <div className="space-y-3">
-        <div className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-purple-300">
-          <Download className="w-4 h-4 text-purple-400" />
-          <span>Software Distribution & Packages · Obsidiuss</span>
+        <div className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-blue-600">
+          <Download className="w-4 h-4 text-blue-600" />
+          <span>Software Distribution &amp; Packages · Obsidiuss</span>
         </div>
-        <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-          Software Releases & Downloads
+        <h1 className="font-display text-3xl sm:text-5xl font-black text-slate-950 tracking-tight">
+          Software Releases &amp; Downloads
         </h1>
-        <p className="text-sm sm:text-base text-zinc-400 max-w-2xl leading-relaxed">
+        <p className="text-sm sm:text-base text-slate-600 max-w-2xl leading-relaxed">
           Browse and download verified client engines, Minecraft mods, Android APKs, PC software,
-          and developer source code packages engineered by Obsidiuss.
+          and developer source code packages engineered by Bhaskar Yadav (Obsidiuss).
         </p>
       </div>
 
@@ -148,14 +148,14 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
                 onClick={() => handleCategoryChange(cat.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
                   active
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                    : 'bg-white/[0.03] hover:bg-white/[0.08] text-zinc-400 hover:text-white border border-white/5'
+                    ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md shadow-blue-600/20'
+                    : 'bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-950 border border-slate-200'
                 }`}
               >
                 <span>{cat.label}</span>
                 <span
                   className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                    active ? 'bg-white/20 text-white' : 'bg-white/5 text-zinc-500'
+                    active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
                   }`}
                 >
                   {cat.count}
@@ -165,37 +165,37 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
           })}
         </div>
 
-        <div className="p-3 rounded-2xl glass-panel border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="p-3 rounded-2xl glass-panel flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Filter by name, tag, or version..."
-              className="w-full pl-9 pr-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-purple-500"
+              className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
             />
           </div>
 
           <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto">
-            <div className="flex items-center gap-1.5 text-xs text-zinc-400">
-              <ArrowUpDown className="w-3.5 h-3.5 text-purple-400" />
+            <div className="flex items-center gap-1.5 text-xs text-slate-600">
+              <ArrowUpDown className="w-3.5 h-3.5 text-blue-600" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as 'newest' | 'downloads' | 'rating')}
-                className="bg-white/[0.04] border border-white/10 text-white text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-purple-500"
+                className="bg-slate-50 border border-slate-200 text-slate-900 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-blue-500"
               >
-                <option value="newest" className="bg-zinc-900">Recently Added</option>
-                <option value="downloads" className="bg-zinc-900">Most Downloaded</option>
-                <option value="rating" className="bg-zinc-900">Highest Rated</option>
+                <option value="newest">Recently Added</option>
+                <option value="downloads">Most Downloaded</option>
+                <option value="rating">Highest Rated</option>
               </select>
             </div>
 
-            <div className="flex items-center bg-white/[0.04] p-1 rounded-xl border border-white/5">
+            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-1.5 rounded-lg text-xs transition ${
-                  viewMode === 'grid' ? 'bg-purple-600 text-white' : 'text-zinc-400 hover:text-white'
+                  viewMode === 'grid' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'
                 }`}
                 title="Grid view"
               >
@@ -204,7 +204,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
               <button
                 onClick={() => setViewMode('list')}
                 className={`p-1.5 rounded-lg text-xs transition ${
-                  viewMode === 'list' ? 'bg-purple-600 text-white' : 'text-zinc-400 hover:text-white'
+                  viewMode === 'list' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'
                 }`}
                 title="List view"
               >
@@ -216,9 +216,9 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
       </div>
 
       {/* Results Count */}
-      <div className="flex items-center justify-between text-xs text-zinc-400 px-1">
+      <div className="flex items-center justify-between text-xs text-slate-500 px-1">
         <span>
-          Showing <strong className="text-white font-mono">{filteredResources.length}</strong> resources
+          Showing <strong className="text-slate-950 font-mono">{filteredResources.length}</strong> resources
         </span>
         {(activeCategory !== 'all' || searchQuery) && (
           <button
@@ -227,7 +227,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
               setSearchQuery('');
               onFilterChange?.('all', '');
             }}
-            className="text-purple-400 hover:underline"
+            className="text-blue-600 font-semibold hover:underline"
           >
             Reset filters
           </button>
@@ -240,17 +240,17 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
-              className="h-80 rounded-3xl glass-panel border border-white/5 animate-pulse bg-white/[0.02]"
+              className="h-80 rounded-3xl bg-white border border-slate-200 animate-pulse"
             />
           ))}
         </div>
       ) : filteredResources.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl glass-panel border border-white/10 space-y-3">
-          <Layers className="w-8 h-8 text-zinc-600 mx-auto" />
-          <p className="text-sm font-bold text-white">
+        <div className="p-12 text-center rounded-3xl glass-panel space-y-3">
+          <Layers className="w-8 h-8 text-slate-400 mx-auto" />
+          <p className="text-sm font-bold text-slate-950">
             {resources.length === 0 ? 'No resources published yet' : 'No matching resources found'}
           </p>
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-slate-500">
             {resources.length === 0
               ? 'Resources published by Obsidiuss will appear here automatically.'
               : `No downloads match "${searchQuery || activeCategory}".`}
@@ -262,7 +262,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
                 setActiveCategory('all');
                 onFilterChange?.('all', '');
               }}
-              className="px-4 py-2 rounded-xl bg-purple-600 text-white text-xs font-semibold hover:bg-purple-500 transition"
+              className="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition"
             >
               Reset Filters
             </button>
@@ -275,10 +275,10 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
             return (
               <div
                 key={res.id}
-                className="group rounded-3xl glass-panel border border-white/10 overflow-hidden hover:border-purple-500/40 transition duration-300 flex flex-col justify-between"
+                className="group rounded-3xl glass-panel glass-panel-hover overflow-hidden flex flex-col justify-between"
               >
                 <div>
-                  <div className="relative h-44 w-full overflow-hidden bg-zinc-900">
+                  <div className="relative h-44 w-full overflow-hidden bg-slate-100">
                     {res.thumbnailUrl ? (
                       <img
                         src={res.thumbnailUrl}
@@ -286,31 +286,31 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-purple-950/60 via-[#0d0e17] to-indigo-950/60 flex items-center justify-center">
-                        <Download className="w-10 h-10 text-purple-400/40" />
+                      <div className="w-full h-full bg-gradient-to-br from-blue-600 via-sky-500 to-pink-500 flex items-center justify-center">
+                        <Download className="w-10 h-10 text-white/60" />
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0e0f18] via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
                     <div className="absolute top-3 left-3 flex items-center gap-2">
-                      <div className="px-2.5 py-1 rounded-xl bg-black/75 backdrop-blur-md text-[10px] font-mono text-purple-300 border border-white/10 font-semibold">
+                      <div className="px-2.5 py-1 rounded-xl bg-white/95 backdrop-blur-md text-[10px] font-mono text-blue-700 border border-slate-200 font-bold shadow-sm">
                         {res.category} · {res.version}
                       </div>
                     </div>
 
                     <button
                       onClick={(e) => handleBookmarkToggle(e, res.id)}
-                      className="absolute top-3 right-3 p-2 rounded-full bg-black/60 backdrop-blur-md text-zinc-300 hover:text-purple-300 transition"
+                      className="absolute top-3 right-3 p-2 rounded-full bg-white/90 hover:bg-white backdrop-blur-md text-slate-600 hover:text-pink-600 shadow-sm transition"
                       title={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
                     >
-                      <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-current text-purple-400' : ''}`} />
+                      <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-current text-pink-600' : ''}`} />
                     </button>
                   </div>
 
                   <div className="p-5">
-                    <h3 className="text-base font-bold text-white group-hover:text-purple-300 transition line-clamp-1">
+                    <h3 className="font-display text-base font-bold text-slate-950 group-hover:text-blue-600 transition line-clamp-1">
                       {res.title}
                     </h3>
-                    <p className="text-xs text-zinc-400 mt-2 line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-slate-600 mt-2 line-clamp-2 leading-relaxed">
                       {res.description}
                     </p>
 
@@ -324,7 +324,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
                               e.stopPropagation();
                               handleSearchChange(tag);
                             }}
-                            className="px-2 py-0.5 rounded-md text-[10px] bg-white/[0.03] hover:bg-purple-500/20 text-zinc-400 hover:text-purple-300 border border-white/5 transition"
+                            className="px-2 py-0.5 rounded-md text-[10px] bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-700 border border-slate-200 transition"
                           >
                             #{tag}
                           </button>
@@ -332,13 +332,13 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
                       </div>
                     )}
 
-                    <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-zinc-400">
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                       <span className="font-mono">{res.fileSize}</span>
-                      <span className="flex items-center gap-1 text-amber-400 font-mono font-semibold">
+                      <span className="flex items-center gap-1 text-orange-500 font-mono font-semibold">
                         <Star className="w-3.5 h-3.5 fill-current" />{' '}
                         {res.ratingCount && res.ratingCount > 0 ? res.rating.toFixed(1) : 'New'}
                       </span>
-                      <span className="font-mono text-purple-300">
+                      <span className="font-mono font-semibold text-blue-600">
                         {(res.downloadsCount || 0).toLocaleString()} dl
                       </span>
                     </div>
@@ -348,9 +348,9 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
                 <div className="px-5 pb-5">
                   <button
                     onClick={() => onSelectResource(res)}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/[0.04] hover:bg-gradient-to-r hover:from-purple-600 hover:to-indigo-600 text-zinc-200 hover:text-white border border-white/10 hover:border-transparent text-xs font-bold transition shadow-sm"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-50 hover:bg-gradient-to-r hover:from-blue-600 hover:to-sky-500 text-slate-800 hover:text-white border border-slate-200 hover:border-transparent text-xs font-bold transition shadow-sm"
                   >
-                    <Download className="w-3.5 h-3.5 text-purple-400" />
+                    <Download className="w-3.5 h-3.5 text-blue-600 group-hover:text-current" />
                     <span>Download Resource</span>
                   </button>
                 </div>
@@ -364,45 +364,45 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
             <div
               key={res.id}
               onClick={() => onSelectResource(res)}
-              className="p-4 rounded-2xl glass-panel glass-panel-hover cursor-pointer border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              className="p-4 rounded-2xl glass-panel glass-panel-hover cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4"
             >
               <div className="flex items-start sm:items-center gap-4">
                 {res.thumbnailUrl ? (
                   <img
                     src={res.thumbnailUrl}
                     alt=""
-                    className="w-16 h-16 rounded-xl object-cover shrink-0 ring-1 ring-white/10"
+                    className="w-16 h-16 rounded-xl object-cover shrink-0 ring-1 ring-slate-200"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-xl bg-purple-500/15 border border-purple-500/20 flex items-center justify-center shrink-0">
-                    <Download className="w-6 h-6 text-purple-400" />
+                  <div className="w-16 h-16 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center shrink-0">
+                    <Download className="w-6 h-6 text-blue-600" />
                   </div>
                 )}
                 <div>
                   <div className="flex items-center gap-1.5 mb-1 text-xs font-mono">
-                    <span className="uppercase text-[10px] font-bold text-purple-300">
+                    <span className="uppercase text-[10px] font-bold text-blue-600">
                       {res.category}
                     </span>
-                    <span className="text-zinc-600">·</span>
-                    <span className="text-[11px] text-zinc-400 font-semibold">
+                    <span className="text-slate-300">·</span>
+                    <span className="text-[11px] text-slate-500 font-semibold">
                       {res.version}
                     </span>
                   </div>
-                  <h3 className="text-sm font-bold text-white hover:text-purple-300 transition">
+                  <h3 className="text-sm font-bold text-slate-950 hover:text-blue-600 transition">
                     {res.title}
                   </h3>
-                  <p className="text-xs text-zinc-400 line-clamp-1 max-w-xl mt-0.5">
+                  <p className="text-xs text-slate-600 line-clamp-1 max-w-xl mt-0.5">
                     {res.description}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between sm:justify-end gap-5 shrink-0 pt-2 sm:pt-0 border-t sm:border-0 border-white/5">
+              <div className="flex items-center justify-between sm:justify-end gap-5 shrink-0 pt-2 sm:pt-0 border-t sm:border-0 border-slate-100">
                 <div className="text-left sm:text-right text-xs">
-                  <div className="font-mono font-bold text-white">
+                  <div className="font-mono font-bold text-slate-950">
                     {(res.downloadsCount || 0).toLocaleString()}
                   </div>
-                  <span className="text-[10px] text-zinc-500">{res.fileSize}</span>
+                  <span className="text-[10px] text-slate-500">{res.fileSize}</span>
                 </div>
 
                 <button
@@ -410,7 +410,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
                     e.stopPropagation();
                     onSelectResource(res);
                   }}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition shadow-md shadow-purple-900/30"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-sm"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Get</span>
@@ -422,10 +422,10 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
       )}
 
       {/* Cross-Page Internal Navigation Strip */}
-      <div className="p-6 rounded-3xl glass-panel border border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="p-6 rounded-3xl glass-panel flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h3 className="text-sm font-bold text-white">Looking for something specific?</h3>
-          <p className="text-xs text-zinc-400">
+          <h3 className="text-sm font-bold text-slate-950">Looking for something specific?</h3>
+          <p className="text-xs text-slate-600">
             Explore full project showcases, ask setup questions in the forum, or request a new release.
           </p>
         </div>
@@ -436,9 +436,9 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
               e.preventDefault();
               onNavigate?.('projects');
             }}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-semibold text-zinc-200 transition"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-semibold text-slate-800 transition"
           >
-            <FolderGit2 className="w-3.5 h-3.5 text-indigo-400" />
+            <FolderGit2 className="w-3.5 h-3.5 text-blue-600" />
             <span>Projects Showcase</span>
           </a>
           <a
@@ -447,9 +447,9 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
               e.preventDefault();
               onNavigate?.('community');
             }}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-semibold text-zinc-200 transition"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-semibold text-slate-800 transition"
           >
-            <Users className="w-3.5 h-3.5 text-cyan-400" />
+            <Users className="w-3.5 h-3.5 text-pink-500" />
             <span>Setup Support Forum</span>
           </a>
           <a
@@ -458,9 +458,9 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({
               e.preventDefault();
               onNavigate?.('contact');
             }}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-xs font-bold text-purple-200 transition"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-xs font-bold text-blue-700 transition"
           >
-            <Mail className="w-3.5 h-3.5" />
+            <Mail className="w-3.5 h-3.5 text-blue-600" />
             <span>Request / Report</span>
           </a>
         </div>

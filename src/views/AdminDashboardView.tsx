@@ -10,7 +10,6 @@ import {
   Download,
   Users,
   Bell,
-  MessageSquare,
   BarChart3,
   Star,
   FolderGit2,
@@ -191,11 +190,11 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   if (!isAuthorized) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-24 text-center space-y-5">
-        <div className="w-16 h-16 rounded-3xl bg-white/[0.04] text-zinc-400 border border-white/10 flex items-center justify-center mx-auto shadow-xl">
+        <div className="w-16 h-16 rounded-3xl bg-slate-100 text-slate-500 border border-slate-200 flex items-center justify-center mx-auto shadow-sm">
           <Lock className="w-8 h-8" />
         </div>
-        <h2 className="text-2xl font-extrabold text-white">Restricted Area</h2>
-        <p className="text-xs text-zinc-400 max-w-md mx-auto leading-relaxed">
+        <h2 className="font-display text-2xl font-extrabold text-slate-950">Restricted Area</h2>
+        <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
           {user
             ? 'This page is not available for your account.'
             : 'Please sign in with an authorized account to continue.'}
@@ -204,14 +203,14 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           {!user && (
             <button
               onClick={openAuth}
-              className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition"
+              className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition"
             >
               Sign In
             </button>
           )}
           <button
             onClick={() => setCurrentTab('home')}
-            className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 text-xs font-semibold transition"
+            className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold transition"
           >
             Back to Homepage
           </button>
@@ -254,7 +253,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     }
   };
 
-  // --- Resource Handlers ---
+  // Resource Handlers
   const resetResourceForm = () => {
     setIsAddingResource(false);
     setEditingResourceId(null);
@@ -343,7 +342,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     }
   };
 
-  // --- Project Handlers ---
+  // Project Handlers
   const resetProjectForm = () => {
     setIsAddingProject(false);
     setEditingProjectId(null);
@@ -426,7 +425,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     }
   };
 
-  // --- Announcement Handlers ---
+  // Announcement Handlers
   const resetAnnouncementForm = () => {
     setIsAddingAnnouncement(false);
     setEditingAnnouncementId(null);
@@ -484,7 +483,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     }
   };
 
-  // --- Category Handler ---
+  // Category Handler
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!catName.trim()) return;
@@ -522,21 +521,21 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   const renderDeleteButton = (key: string, onConfirm: () => Promise<void> | void) => {
     if (confirmDeleteKey === key) {
       return (
-        <div className="inline-flex items-center gap-1.5 bg-rose-500/15 border border-rose-500/30 rounded-lg px-2 py-1">
+        <div className="inline-flex items-center gap-1.5 bg-rose-50 border border-rose-200 rounded-lg px-2 py-1">
           <button
             type="button"
             onClick={async () => {
               await onConfirm();
               setConfirmDeleteKey(null);
             }}
-            className="text-[11px] font-bold text-rose-300 hover:text-white"
+            className="text-[11px] font-bold text-rose-600 hover:text-rose-800"
           >
             Confirm
           </button>
           <button
             type="button"
             onClick={() => setConfirmDeleteKey(null)}
-            className="text-[11px] text-zinc-400 hover:text-white"
+            className="text-[11px] text-slate-500 hover:text-slate-900"
           >
             Cancel
           </button>
@@ -547,7 +546,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       <button
         type="button"
         onClick={() => setConfirmDeleteKey(key)}
-        className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition"
+        className="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition"
         title="Delete"
       >
         <Trash2 className="w-3.5 h-3.5" />
@@ -555,32 +554,35 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     );
   };
 
+  const inputCls =
+    'w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15';
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 animate-fade-up">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-3xl glass-panel border border-amber-500/30 bg-gradient-to-r from-amber-950/20 via-[#0d0e17] to-zinc-900/60">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-3xl glass-panel border-orange-200 bg-gradient-to-r from-white via-orange-50/40 to-blue-50/40">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-orange-50 text-orange-600 border border-orange-200 flex items-center justify-center shrink-0 shadow-sm">
             <Shield className="w-6 h-6" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-extrabold text-white">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="font-display text-xl sm:text-2xl font-extrabold text-slate-950">
                 OBSIDIUSS Admin Panel
               </h1>
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700 border border-orange-200">
                 Verified Admin
               </span>
             </div>
-            <p className="text-xs text-zinc-400 mt-0.5">
-              Signed in as <strong className="text-zinc-200">{user.email}</strong>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Signed in as <strong className="text-slate-900">{user.email}</strong>
             </p>
           </div>
         </div>
       </div>
 
       {/* Admin Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-white/10 pb-3 overflow-x-auto">
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto">
         {(
           [
             { id: 'resources', label: `Resources (${resources.length})`, icon: Download },
@@ -590,12 +592,12 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
             { id: 'reviews', label: `Reviews (${allReviews.length})`, icon: Star },
             {
               id: 'moderation',
-              label: `Moderation (${discussions.length}${pendingReportsCount ? ` • ${pendingReportsCount} reports` : ''})`,
+              label: `Moderation (${discussions.length}${pendingReportsCount ? ` · ${pendingReportsCount} reports` : ''})`,
               icon: Flag,
             },
             {
               id: 'feedback',
-              label: `Feedback (${feedbackList.length}${newFeedbackCount ? ` • ${newFeedbackCount} new` : ''})`,
+              label: `Feedback (${feedbackList.length}${newFeedbackCount ? ` · ${newFeedbackCount} new` : ''})`,
               icon: Mail,
             },
             { id: 'users', label: `Users (${usersList.length})`, icon: Users },
@@ -610,8 +612,8 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               onClick={() => setActiveAdminTab(tab.id)}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
                 active
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-md'
-                  : 'text-zinc-400 hover:text-white'
+                  ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-950 hover:bg-white border border-transparent hover:border-slate-200'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -625,13 +627,15 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       {activeAdminTab === 'resources' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white">Resource Catalogue & Uploads</h2>
+            <h2 className="font-display text-lg font-bold text-slate-950">
+              Resource Catalogue &amp; Uploads
+            </h2>
             <button
               onClick={() => {
                 if (isAddingResource) resetResourceForm();
                 else setIsAddingResource(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-extrabold text-xs shadow-sm transition"
             >
               <Plus className="w-4 h-4" />
               <span>{isAddingResource ? 'Close Form' : 'Publish Resource'}</span>
@@ -641,15 +645,15 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           {isAddingResource && (
             <form
               onSubmit={handleSaveResource}
-              className="p-6 rounded-3xl glass-panel border border-amber-500/30 space-y-4 bg-zinc-950/60"
+              className="p-6 rounded-3xl glass-panel border-blue-200 space-y-4 animate-modal-pop"
             >
-              <h3 className="text-sm font-bold text-amber-300">
+              <h3 className="text-sm font-bold text-blue-700">
                 {editingResourceId ? 'Edit Resource' : 'Publish New Resource'}
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1">Title *</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Title *</label>
                   <input
                     type="text"
                     value={resTitle}
@@ -657,25 +661,25 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                     placeholder="e.g. Velocity Client"
                     maxLength={120}
                     required
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className={inputCls}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1">Category *</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Category *</label>
                   <select
                     value={resCategory}
                     onChange={(e) => setResCategory(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className={inputCls}
                   >
-                    <option value="minecraft" className="bg-zinc-900">Minecraft</option>
-                    <option value="android" className="bg-zinc-900">Android</option>
-                    <option value="pc-software" className="bg-zinc-900">PC Software</option>
-                    <option value="source-code" className="bg-zinc-900">Source Code</option>
-                    <option value="tutorials" className="bg-zinc-900">Tutorials</option>
-                    <option value="dev-tools" className="bg-zinc-900">Dev Tools</option>
+                    <option value="minecraft">Minecraft</option>
+                    <option value="android">Android</option>
+                    <option value="pc-software">PC Software</option>
+                    <option value="source-code">Source Code</option>
+                    <option value="tutorials">Tutorials</option>
+                    <option value="dev-tools">Dev Tools</option>
                     {categories.map((c) => (
-                      <option key={c.id} value={c.slug} className="bg-zinc-900">
+                      <option key={c.id} value={c.slug}>
                         {c.name}
                       </option>
                     ))}
@@ -685,7 +689,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1">Version *</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Version *</label>
                   <input
                     type="text"
                     value={resVersion}
@@ -693,28 +697,28 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                     placeholder="v1.0.0"
                     maxLength={30}
                     required
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className={inputCls}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1">File Size</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">File Size</label>
                   <input
                     type="text"
                     value={resFileSize}
                     onChange={(e) => setResFileSize(e.target.value)}
                     placeholder="e.g. 12.4 MB"
                     maxLength={30}
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className={inputCls}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1">Tags (comma separated)</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Tags (comma separated)</label>
                   <input
                     type="text"
                     value={resTags}
                     onChange={(e) => setResTags(e.target.value)}
                     placeholder="Minecraft, Fabric, FPS"
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className={inputCls}
                   />
                 </div>
               </div>
@@ -722,8 +726,8 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-semibold text-zinc-300">Direct Download URL *</label>
-                    <label className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 hover:text-amber-200 cursor-pointer">
+                    <label className="text-xs font-semibold text-slate-700">Direct Download URL *</label>
+                    <label className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 cursor-pointer">
                       <Upload className="w-3 h-3" />
                       <span>{uploadingField === 'package' ? 'Uploading...' : 'Upload File'}</span>
                       <input
@@ -740,11 +744,11 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                     onChange={(e) => setResDownloadUrl(e.target.value)}
                     placeholder="https://..."
                     required
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className={inputCls}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Mirror URL (Optional)
                   </label>
                   <input
@@ -752,15 +756,15 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                     value={resMirrorUrl}
                     onChange={(e) => setResMirrorUrl(e.target.value)}
                     placeholder="https://..."
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className={inputCls}
                   />
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-semibold text-zinc-300">Thumbnail Image URL</label>
-                  <label className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 hover:text-amber-200 cursor-pointer">
+                  <label className="text-xs font-semibold text-slate-700">Thumbnail Image URL</label>
+                  <label className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 cursor-pointer">
                     <Upload className="w-3 h-3" />
                     <span>{uploadingField === 'thumbnail' ? 'Uploading...' : 'Upload Image'}</span>
                     <input
@@ -777,43 +781,43 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                   value={resThumbnailUrl}
                   onChange={(e) => setResThumbnailUrl(e.target.value)}
                   placeholder="https://... (optional)"
-                  className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                  className={inputCls}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1">Description</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Description</label>
                 <textarea
                   value={resDesc}
                   onChange={(e) => setResDesc(e.target.value)}
                   rows={3}
                   maxLength={5000}
                   placeholder="Describe features and usage..."
-                  className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400 resize-none"
+                  className={`${inputCls} resize-none`}
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1">Changelog</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Changelog</label>
                   <textarea
                     value={resChangelog}
                     onChange={(e) => setResChangelog(e.target.value)}
                     rows={2}
                     maxLength={3000}
                     placeholder="Release notes..."
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400 resize-none font-mono"
+                    className={`${inputCls} resize-none font-mono`}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1">Requirements</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Requirements</label>
                   <textarea
                     value={resRequirements}
                     onChange={(e) => setResRequirements(e.target.value)}
                     rows={2}
                     maxLength={1000}
                     placeholder="e.g. Fabric 1.20.4, Android 10+..."
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400 resize-none"
+                    className={`${inputCls} resize-none`}
                   />
                 </div>
               </div>
@@ -824,9 +828,9 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                   id="featured-check"
                   checked={resFeatured}
                   onChange={(e) => setResFeatured(e.target.checked)}
-                  className="rounded border-zinc-700 text-amber-500 focus:ring-0"
+                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                 />
-                <label htmlFor="featured-check" className="text-xs text-zinc-300 cursor-pointer">
+                <label htmlFor="featured-check" className="text-xs text-slate-700 cursor-pointer font-medium">
                   Feature on Homepage
                 </label>
               </div>
@@ -835,13 +839,13 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 <button
                   type="button"
                   onClick={resetResourceForm}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-900"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-extrabold transition"
+                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-sm transition"
                 >
                   {editingResourceId ? 'Update Resource' : 'Publish Resource'}
                 </button>
@@ -849,15 +853,15 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
             </form>
           )}
 
-          <div className="rounded-3xl glass-panel border border-white/10 overflow-hidden">
+          <div className="rounded-3xl glass-panel overflow-hidden">
             {resources.length === 0 ? (
-              <div className="p-10 text-center text-xs text-zinc-400">
+              <div className="p-10 text-center text-xs text-slate-500">
                 No resources published yet. Click "Publish Resource" to add your first release.
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-white/[0.02] border-b border-white/5 text-zinc-400 font-bold uppercase tracking-wider text-[10px]">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                     <tr>
                       <th className="p-4">Resource</th>
                       <th className="p-4">Category</th>
@@ -866,27 +870,27 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                       <th className="p-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-slate-200">
                     {resources.map((r) => (
-                      <tr key={r.id} className="hover:bg-white/[0.02] transition">
+                      <tr key={r.id} className="hover:bg-slate-50/70 transition">
                         <td className="p-4 flex items-center gap-3">
                           {r.thumbnailUrl ? (
                             <img src={r.thumbnailUrl} alt="" className="w-10 h-10 rounded-lg object-cover" />
                           ) : (
-                            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center shrink-0">
-                              <Download className="w-4 h-4 text-purple-400" />
+                            <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center shrink-0">
+                              <Download className="w-4 h-4 text-blue-600" />
                             </div>
                           )}
                           <div>
-                            <p className="font-bold text-white">{r.title}</p>
-                            <p className="text-[11px] text-zinc-400">{r.fileSize}</p>
+                            <p className="font-bold text-slate-950">{r.title}</p>
+                            <p className="text-[11px] text-slate-500">{r.fileSize}</p>
                           </div>
                         </td>
-                        <td className="p-4 uppercase text-[10px] font-bold text-purple-400">
+                        <td className="p-4 uppercase text-[10px] font-bold text-blue-600">
                           {r.category}
                         </td>
-                        <td className="p-4 font-mono">{r.version}</td>
-                        <td className="p-4 font-mono font-bold text-zinc-300">
+                        <td className="p-4 font-mono text-slate-700">{r.version}</td>
+                        <td className="p-4 font-mono font-bold text-slate-900">
                           {(r.downloadsCount || 0).toLocaleString()}
                         </td>
                         <td className="p-4 text-right">
@@ -895,8 +899,8 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                               onClick={() => updateResource(r.id, { featured: !r.featured })}
                               className={`p-1.5 rounded-lg transition ${
                                 r.featured
-                                  ? 'bg-amber-500/20 text-amber-300'
-                                  : 'bg-white/5 text-zinc-400 hover:text-amber-300'
+                                  ? 'bg-orange-50 text-orange-600 border border-orange-200'
+                                  : 'bg-slate-100 text-slate-400 hover:text-orange-500'
                               }`}
                               title={r.featured ? 'Remove from featured' : 'Feature on homepage'}
                             >
@@ -904,7 +908,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                             </button>
                             <button
                               onClick={() => handleEditResourceClick(r)}
-                              className="p-1.5 rounded-lg bg-white/5 text-zinc-300 hover:text-white hover:bg-white/10"
+                              className="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:text-slate-950 hover:bg-slate-200"
                               title="Edit"
                             >
                               <Edit className="w-3.5 h-3.5" />
@@ -929,13 +933,13 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       {activeAdminTab === 'projects' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white">Projects Showcase Manager</h2>
+            <h2 className="font-display text-lg font-bold text-slate-950">Projects Showcase Manager</h2>
             <button
               onClick={() => {
                 if (isAddingProject) resetProjectForm();
                 else setIsAddingProject(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-extrabold text-xs shadow-sm transition"
             >
               <Plus className="w-4 h-4" />
               <span>{isAddingProject ? 'Close Form' : 'Add Project'}</span>
@@ -945,26 +949,26 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           {isAddingProject && (
             <form
               onSubmit={handleSaveProject}
-              className="p-6 rounded-3xl glass-panel border border-amber-500/30 space-y-4 bg-zinc-950/60"
+              className="p-6 rounded-3xl glass-panel border-blue-200 space-y-4 animate-modal-pop"
             >
-              <h3 className="text-sm font-bold text-amber-300">
+              <h3 className="text-sm font-bold text-blue-700">
                 {editingProjectId ? 'Edit Project' : 'Publish New Project'}
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1">Project Title *</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Project Title *</label>
                   <input
                     type="text"
                     value={projTitle}
                     onChange={(e) => setProjTitle(e.target.value)}
                     maxLength={120}
                     required
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className={inputCls}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1">Category *</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Category *</label>
                   <input
                     type="text"
                     value={projCategory}
@@ -972,52 +976,52 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                     placeholder="e.g. Minecraft Client, Android App"
                     maxLength={50}
                     required
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className={inputCls}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1">Status</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Status</label>
                   <select
                     value={projStatus}
                     onChange={(e) => setProjStatus(e.target.value as Project['status'])}
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className={inputCls}
                   >
-                    <option value="Active" className="bg-zinc-900">Active</option>
-                    <option value="Beta" className="bg-zinc-900">Beta</option>
-                    <option value="In Development" className="bg-zinc-900">In Development</option>
-                    <option value="Completed" className="bg-zinc-900">Completed</option>
+                    <option value="Active">Active</option>
+                    <option value="Beta">Beta</option>
+                    <option value="In Development">In Development</option>
+                    <option value="Completed">Completed</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1">Tagline *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Tagline *</label>
                 <input
                   type="text"
                   value={projTagline}
                   onChange={(e) => setProjTagline(e.target.value)}
                   maxLength={200}
                   required
-                  className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                  className={inputCls}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1">Description</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Description</label>
                 <textarea
                   value={projDesc}
                   onChange={(e) => setProjDesc(e.target.value)}
                   rows={3}
                   maxLength={5000}
-                  className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400 resize-none"
+                  className={`${inputCls} resize-none`}
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-semibold text-zinc-300">Banner Image URL</label>
-                    <label className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 cursor-pointer">
+                    <label className="text-xs font-semibold text-slate-700">Banner Image URL</label>
+                    <label className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 cursor-pointer">
                       <Upload className="w-3 h-3" />
                       <span>{uploadingField === 'projectBanner' ? 'Uploading...' : 'Upload'}</span>
                       <input
@@ -1034,50 +1038,50 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                     value={projBannerUrl}
                     onChange={(e) => setProjBannerUrl(e.target.value)}
                     placeholder="https://..."
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className={inputCls}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1">Tech Tags (comma separated)</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Tech Tags (comma separated)</label>
                   <input
                     type="text"
                     value={projTags}
                     onChange={(e) => setProjTags(e.target.value)}
                     placeholder="TypeScript, Java, Kotlin"
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className={inputCls}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1">GitHub / Source URL</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">GitHub / Source URL</label>
                   <input
                     type="url"
                     value={projGithubUrl}
                     onChange={(e) => setProjGithubUrl(e.target.value)}
                     placeholder="https://github.com/..."
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className={inputCls}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1">Live Demo URL</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Live Demo URL</label>
                   <input
                     type="url"
                     value={projDemoUrl}
                     onChange={(e) => setProjDemoUrl(e.target.value)}
                     placeholder="https://..."
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className={inputCls}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1">Build Download URL</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Build Download URL</label>
                   <input
                     type="url"
                     value={projDownloadUrl}
                     onChange={(e) => setProjDownloadUrl(e.target.value)}
                     placeholder="https://..."
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className={inputCls}
                   />
                 </div>
               </div>
@@ -1088,9 +1092,9 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                   id="proj-featured"
                   checked={projFeatured}
                   onChange={(e) => setProjFeatured(e.target.checked)}
-                  className="rounded border-zinc-700 text-amber-500"
+                  className="rounded border-slate-300 text-blue-600"
                 />
-                <label htmlFor="proj-featured" className="text-xs text-zinc-300 cursor-pointer">
+                <label htmlFor="proj-featured" className="text-xs text-slate-700 cursor-pointer font-medium">
                   Mark as Featured Project
                 </label>
               </div>
@@ -1099,13 +1103,13 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 <button
                   type="button"
                   onClick={resetProjectForm}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-900"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-extrabold transition"
+                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold transition"
                 >
                   {editingProjectId ? 'Update Project' : 'Publish Project'}
                 </button>
@@ -1115,30 +1119,30 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
           <div className="space-y-3">
             {projects.length === 0 ? (
-              <div className="p-10 text-center rounded-3xl glass-panel border border-white/10 text-xs text-zinc-400">
+              <div className="p-10 text-center rounded-3xl glass-panel text-xs text-slate-500">
                 No projects published yet.
               </div>
             ) : (
               projects.map((p) => (
                 <div
                   key={p.id}
-                  className="p-5 rounded-2xl glass-panel border border-white/5 flex items-center justify-between gap-4"
+                  className="p-5 rounded-2xl glass-panel flex items-center justify-between gap-4"
                 >
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] font-bold uppercase text-indigo-300 bg-indigo-500/15 px-2 py-0.5 rounded">
+                      <span className="text-[10px] font-bold uppercase text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
                         {p.category}
                       </span>
-                      <span className="text-[10px] text-zinc-400">{p.status}</span>
-                      <span className="text-xs font-bold text-white">{p.title}</span>
+                      <span className="text-[10px] text-slate-500">{p.status}</span>
+                      <span className="text-xs font-bold text-slate-950">{p.title}</span>
                     </div>
-                    <p className="text-xs text-zinc-400 line-clamp-1">{p.tagline}</p>
+                    <p className="text-xs text-slate-600 line-clamp-1">{p.tagline}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => updateProject(p.id, { featured: !p.featured })}
                       className={`p-1.5 rounded-lg ${
-                        p.featured ? 'bg-amber-500/20 text-amber-300' : 'bg-white/5 text-zinc-400'
+                        p.featured ? 'bg-orange-50 text-orange-600' : 'bg-slate-100 text-slate-400'
                       }`}
                       title="Toggle featured"
                     >
@@ -1146,7 +1150,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                     </button>
                     <button
                       onClick={() => handleEditProjectClick(p)}
-                      className="p-1.5 rounded-lg bg-white/5 text-zinc-300 hover:text-white"
+                      className="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:text-slate-950"
                       title="Edit"
                     >
                       <Edit className="w-3.5 h-3.5" />
@@ -1167,13 +1171,13 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       {activeAdminTab === 'announcements' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white">Changelogs & Broadcasts</h2>
+            <h2 className="font-display text-lg font-bold text-slate-950">Changelogs &amp; Broadcasts</h2>
             <button
               onClick={() => {
                 if (isAddingAnnouncement) resetAnnouncementForm();
                 else setIsAddingAnnouncement(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-extrabold text-xs shadow-sm transition"
             >
               <Plus className="w-4 h-4" />
               <span>{isAddingAnnouncement ? 'Close Form' : 'New Announcement'}</span>
@@ -1183,61 +1187,61 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           {isAddingAnnouncement && (
             <form
               onSubmit={handleSaveAnnouncement}
-              className="p-6 rounded-3xl glass-panel border border-amber-500/30 space-y-4 bg-zinc-950/60"
+              className="p-6 rounded-3xl glass-panel border-blue-200 space-y-4 animate-modal-pop"
             >
-              <h3 className="text-sm font-bold text-amber-300">
+              <h3 className="text-sm font-bold text-blue-700">
                 {editingAnnouncementId ? 'Edit Announcement' : 'Publish Announcement'}
               </h3>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1">Title *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Title *</label>
                 <input
                   type="text"
                   value={annTitle}
                   onChange={(e) => setAnnTitle(e.target.value)}
                   maxLength={150}
                   required
-                  className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                  className={inputCls}
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1">Category</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Category</label>
                   <select
                     value={annCategory}
                     onChange={(e) => setAnnCategory(e.target.value as Announcement['category'])}
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className={inputCls}
                   >
-                    <option value="Update" className="bg-zinc-900">Update</option>
-                    <option value="Release" className="bg-zinc-900">Release</option>
-                    <option value="Community" className="bg-zinc-900">Community</option>
-                    <option value="Maintenance" className="bg-zinc-900">Maintenance</option>
-                    <option value="Important" className="bg-zinc-900">Important</option>
+                    <option value="Update">Update</option>
+                    <option value="Release">Release</option>
+                    <option value="Community">Community</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Important">Important</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1">Short Excerpt</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Short Excerpt</label>
                   <input
                     type="text"
                     value={annExcerpt}
                     onChange={(e) => setAnnExcerpt(e.target.value)}
                     maxLength={300}
                     placeholder="Brief summary..."
-                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className={inputCls}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1">Full Content *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Full Content *</label>
                 <textarea
                   value={annContent}
                   onChange={(e) => setAnnContent(e.target.value)}
                   rows={5}
                   maxLength={10000}
                   required
-                  className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400 resize-none"
+                  className={`${inputCls} resize-none`}
                 />
               </div>
 
@@ -1247,9 +1251,9 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                   id="ann-pinned-check"
                   checked={annPinned}
                   onChange={(e) => setAnnPinned(e.target.checked)}
-                  className="rounded border-zinc-700 text-amber-500"
+                  className="rounded border-slate-300 text-blue-600"
                 />
-                <label htmlFor="ann-pinned-check" className="text-xs text-zinc-300 cursor-pointer">
+                <label htmlFor="ann-pinned-check" className="text-xs text-slate-700 cursor-pointer font-medium">
                   Pin announcement to top of feed
                 </label>
               </div>
@@ -1258,13 +1262,13 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 <button
                   type="button"
                   onClick={resetAnnouncementForm}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-900"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-extrabold transition"
+                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold transition"
                 >
                   {editingAnnouncementId ? 'Update Announcement' : 'Publish Announcement'}
                 </button>
@@ -1274,31 +1278,31 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
           <div className="space-y-3">
             {announcements.length === 0 ? (
-              <div className="p-10 text-center rounded-3xl glass-panel border border-white/10 text-xs text-zinc-400">
+              <div className="p-10 text-center rounded-3xl glass-panel text-xs text-slate-500">
                 No announcements published yet.
               </div>
             ) : (
               announcements.map((ann) => (
                 <div
                   key={ann.id}
-                  className="p-5 rounded-2xl glass-panel border border-white/5 flex items-center justify-between gap-4"
+                  className="p-5 rounded-2xl glass-panel flex items-center justify-between gap-4"
                 >
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       {ann.pinned && (
-                        <span className="text-[10px] font-bold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded">
+                        <span className="text-[10px] font-bold bg-orange-50 text-orange-700 px-2 py-0.5 rounded">
                           Pinned
                         </span>
                       )}
-                      <span className="text-xs font-bold text-white">{ann.title}</span>
+                      <span className="text-xs font-bold text-slate-950">{ann.title}</span>
                     </div>
-                    <p className="text-xs text-zinc-400 line-clamp-1">{ann.excerpt}</p>
+                    <p className="text-xs text-slate-600 line-clamp-1">{ann.excerpt}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => updateAnnouncement(ann.id, { pinned: !ann.pinned })}
                       className={`p-1.5 rounded-lg ${
-                        ann.pinned ? 'bg-amber-500/20 text-amber-300' : 'bg-white/5 text-zinc-400'
+                        ann.pinned ? 'bg-orange-50 text-orange-600' : 'bg-slate-100 text-slate-400'
                       }`}
                       title="Toggle pin"
                     >
@@ -1306,7 +1310,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                     </button>
                     <button
                       onClick={() => handleEditAnnouncementClick(ann)}
-                      className="p-1.5 rounded-lg bg-white/5 text-zinc-300 hover:text-white"
+                      className="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:text-slate-950"
                       title="Edit"
                     >
                       <Edit className="w-3.5 h-3.5" />
@@ -1326,14 +1330,14 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       {/* TAB 4: CATEGORIES */}
       {activeAdminTab === 'categories' && (
         <div className="space-y-6">
-          <h2 className="text-lg font-bold text-white">Custom Resource Categories</h2>
+          <h2 className="font-display text-lg font-bold text-slate-950">Custom Resource Categories</h2>
 
           <form
             onSubmit={handleAddCategory}
-            className="p-5 rounded-3xl glass-panel border border-white/10 grid grid-cols-1 sm:grid-cols-4 gap-3 items-end"
+            className="p-5 rounded-3xl glass-panel grid grid-cols-1 sm:grid-cols-4 gap-3 items-end"
           >
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1">Category Name *</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Category Name *</label>
               <input
                 type="text"
                 value={catName}
@@ -1341,34 +1345,34 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 placeholder="e.g. Resource Packs"
                 maxLength={80}
                 required
-                className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                className={inputCls}
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1">Slug (Optional)</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Slug (Optional)</label>
               <input
                 type="text"
                 value={catSlug}
                 onChange={(e) => setCatSlug(e.target.value)}
                 placeholder="resource-packs"
                 maxLength={50}
-                className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400 font-mono"
+                className={`${inputCls} font-mono`}
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1">Description</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Description</label>
               <input
                 type="text"
                 value={catDesc}
                 onChange={(e) => setCatDesc(e.target.value)}
                 placeholder="Short summary..."
                 maxLength={300}
-                className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+                className={inputCls}
               />
             </div>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-extrabold transition"
+              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold transition"
             >
               Add Category
             </button>
@@ -1376,7 +1380,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
           <div className="space-y-2">
             {categories.length === 0 ? (
-              <p className="text-xs text-zinc-400 p-6 rounded-2xl glass-panel border border-white/5 text-center">
+              <p className="text-xs text-slate-500 p-6 rounded-2xl glass-panel text-center">
                 No custom categories added yet. Built-in categories (Minecraft, Android, PC Software,
                 Source Codes, Tutorials, Dev Tools) are always available.
               </p>
@@ -1384,12 +1388,12 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               categories.map((c) => (
                 <div
                   key={c.id}
-                  className="p-4 rounded-2xl glass-panel border border-white/5 flex items-center justify-between"
+                  className="p-4 rounded-2xl glass-panel flex items-center justify-between"
                 >
                   <div>
-                    <span className="text-xs font-bold text-white">{c.name}</span>
-                    <span className="ml-2 text-[11px] font-mono text-purple-400">/{c.slug}</span>
-                    {c.description && <p className="text-[11px] text-zinc-400 mt-0.5">{c.description}</p>}
+                    <span className="text-xs font-bold text-slate-950">{c.name}</span>
+                    <span className="ml-2 text-[11px] font-mono text-blue-600">/{c.slug}</span>
+                    {c.description && <p className="text-[11px] text-slate-500 mt-0.5">{c.description}</p>}
                   </div>
                   {renderDeleteButton(`cat-${c.id}`, async () => {
                     await deleteCategory(c.id);
@@ -1407,10 +1411,10 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-bold text-white">
-                Ratings & Reviews Moderation ({allReviews.length})
+              <h2 className="font-display text-lg font-bold text-slate-950">
+                Ratings &amp; Reviews Moderation ({allReviews.length})
               </h2>
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-slate-600">
                 Inspect and remove spam, abusive, or off-topic reviews across all published resources.
               </p>
             </div>
@@ -1418,7 +1422,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               type="button"
               onClick={loadAllReviews}
               disabled={loadingReviews}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-semibold text-zinc-200 transition self-start sm:self-auto"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 transition self-start sm:self-auto"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loadingReviews ? 'animate-spin' : ''}`} />
               <span>Refresh Reviews</span>
@@ -1431,7 +1435,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               value={reviewSearch}
               onChange={(e) => setReviewSearch(e.target.value)}
               placeholder="Search by user, resource, or review text..."
-              className="flex-1 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-amber-400"
+              className="flex-1 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs placeholder-slate-400 focus:outline-none focus:border-blue-500"
             />
             <div className="flex items-center gap-1.5 overflow-x-auto">
               {(['all', 5, 4, 3, 2, 1] as const).map((val) => (
@@ -1441,8 +1445,8 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                   onClick={() => setReviewStarFilter(val)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition whitespace-nowrap ${
                     reviewStarFilter === val
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                      : 'bg-white/[0.03] text-zinc-400 hover:text-white border border-white/5'
+                      ? 'bg-orange-500 text-white shadow-sm'
+                      : 'bg-white text-slate-600 hover:text-slate-950 border border-slate-200'
                   }`}
                 >
                   {val === 'all' ? 'All Stars' : `${val}★`}
@@ -1454,7 +1458,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           {loadingReviews ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-24 rounded-2xl glass-panel animate-pulse bg-white/[0.02]" />
+                <div key={i} className="h-24 rounded-2xl bg-white border border-slate-200 animate-pulse" />
               ))}
             </div>
           ) : (() => {
@@ -1471,7 +1475,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
             if (filteredReviews.length === 0) {
               return (
-                <div className="p-10 text-center rounded-3xl glass-panel border border-white/10 text-xs text-zinc-400">
+                <div className="p-10 text-center rounded-3xl glass-panel text-xs text-slate-500">
                   {allReviews.length === 0
                     ? 'No community resource reviews have been submitted yet.'
                     : 'No reviews match your current search or star filter.'}
@@ -1484,7 +1488,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 {filteredReviews.map((rev) => (
                   <div
                     key={`${rev.resourceId}-${rev.userId}`}
-                    className="p-4 sm:p-5 rounded-2xl glass-panel border border-white/10 flex flex-col sm:flex-row sm:items-start justify-between gap-4"
+                    className="p-4 sm:p-5 rounded-2xl glass-panel flex flex-col sm:flex-row sm:items-start justify-between gap-4"
                   >
                     <div className="flex items-start gap-3 flex-1">
                       <UserAvatar
@@ -1495,28 +1499,28 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                       />
                       <div className="space-y-1.5 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-xs font-bold text-white">{rev.userName}</span>
-                          <span className="text-zinc-600">·</span>
-                          <span className="text-xs font-semibold text-purple-300">
+                          <span className="text-xs font-bold text-slate-950">{rev.userName}</span>
+                          <span className="text-slate-300">·</span>
+                          <span className="text-xs font-semibold text-blue-600">
                             {rev.resourceTitle}
                           </span>
-                          <div className="flex items-center gap-0.5 text-amber-400">
+                          <div className="flex items-center gap-0.5 text-orange-500">
                             {[1, 2, 3, 4, 5].map((s) => (
                               <Star
                                 key={s}
-                                className={`w-3 h-3 ${s <= rev.stars ? 'fill-current' : 'text-zinc-700'}`}
+                                className={`w-3 h-3 ${s <= rev.stars ? 'fill-current' : 'text-slate-300'}`}
                               />
                             ))}
                           </div>
                         </div>
                         {rev.review ? (
-                          <p className="text-xs text-zinc-300 leading-relaxed whitespace-pre-line">
+                          <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line">
                             {rev.review}
                           </p>
                         ) : (
-                          <p className="text-[11px] text-zinc-500 italic">Star rating only (no written review)</p>
+                          <p className="text-[11px] text-slate-400 italic">Star rating only (no written review)</p>
                         )}
-                        <p className="text-[10px] font-mono text-zinc-500">
+                        <p className="text-[10px] font-mono text-slate-400">
                           Submitted {new Date(rev.createdAt).toLocaleString()} · User ID: {rev.userId}
                         </p>
                       </div>
@@ -1544,11 +1548,12 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       {/* TAB 5: MODERATION & REPORTS */}
       {activeAdminTab === 'moderation' && (
         <div className="space-y-8">
-          {/* Moderation Reports Queue */}
           <div className="space-y-3">
-            <h2 className="text-lg font-bold text-white">Reported Content Queue ({reportsList.length})</h2>
+            <h2 className="font-display text-lg font-bold text-slate-950">
+              Reported Content Queue ({reportsList.length})
+            </h2>
             {reportsList.length === 0 ? (
-              <div className="p-8 text-center rounded-2xl glass-panel border border-white/5 text-xs text-zinc-400">
+              <div className="p-8 text-center rounded-2xl glass-panel text-xs text-slate-500">
                 No user reports submitted.
               </div>
             ) : (
@@ -1558,30 +1563,30 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 return (
                   <div
                     key={rep.id}
-                    className="p-5 rounded-2xl glass-panel border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    className="p-5 rounded-2xl glass-panel flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-500/20 text-rose-300">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-50 text-rose-700 border border-rose-200">
                           {rep.targetType}
                         </span>
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                             rep.status === 'pending'
-                              ? 'bg-amber-500/20 text-amber-300'
+                              ? 'bg-orange-50 text-orange-700 border border-orange-200'
                               : rep.status === 'resolved'
-                              ? 'bg-emerald-500/20 text-emerald-300'
-                              : 'bg-white/10 text-zinc-300'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : 'bg-slate-100 text-slate-600'
                           }`}
                         >
                           {rep.status}
                         </span>
-                        <span className="text-xs font-bold text-white">{rep.reason}</span>
+                        <span className="text-xs font-bold text-slate-950">{rep.reason}</span>
                       </div>
-                      <p className="text-[11px] text-zinc-400 font-mono">
-                        Target ID: {rep.targetId} • Reporter: {rep.reporterId}
+                      <p className="text-[11px] text-slate-500 font-mono">
+                        Target ID: {rep.targetId} · Reporter: {rep.reporterId}
                       </p>
-                      {rep.details && <p className="text-xs text-zinc-300">{rep.details}</p>}
+                      {rep.details && <p className="text-xs text-slate-700">{rep.details}</p>}
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0 flex-wrap">
@@ -1602,7 +1607,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                               showToast('Could not remove review (it may already be deleted).', 'info');
                             }
                           }}
-                          className="px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-[11px] font-bold transition"
+                          className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold transition"
                         >
                           Remove Review
                         </button>
@@ -1619,21 +1624,21 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                               showToast('Could not remove reel (it may already be deleted).', 'info');
                             }
                           }}
-                          className="px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-[11px] font-bold transition"
+                          className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold transition"
                         >
                           Remove Reel
                         </button>
                       )}
                       <button
                         onClick={() => updateReportStatus(rep.id, 'resolved')}
-                        className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
+                        className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                         title="Mark resolved"
                       >
                         <CheckCircle2 className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => updateReportStatus(rep.id, 'dismissed')}
-                        className="p-1.5 rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10"
+                        className="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200"
                         title="Dismiss"
                       >
                         <XCircle className="w-3.5 h-3.5" />
@@ -1649,39 +1654,40 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
             )}
           </div>
 
-          {/* Discussions Moderation */}
           <div className="space-y-3">
-            <h2 className="text-lg font-bold text-white">Forum Threads & Comments ({discussions.length})</h2>
+            <h2 className="font-display text-lg font-bold text-slate-950">
+              Forum Threads &amp; Comments ({discussions.length})
+            </h2>
             {discussions.length === 0 ? (
-              <div className="p-8 text-center rounded-2xl glass-panel border border-white/5 text-xs text-zinc-400">
+              <div className="p-8 text-center rounded-2xl glass-panel text-xs text-slate-500">
                 No forum discussions posted yet.
               </div>
             ) : (
               discussions.map((disc) => (
                 <div
                   key={disc.id}
-                  className="p-5 rounded-2xl glass-panel border border-white/5 space-y-3"
+                  className="p-5 rounded-2xl glass-panel space-y-3"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="text-[10px] font-bold uppercase text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded">
+                        <span className="text-[10px] font-bold uppercase text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
                           {disc.category}
                         </span>
                         {disc.pinned && (
-                          <span className="text-[10px] font-bold text-amber-300 bg-amber-500/15 px-2 py-0.5 rounded">
+                          <span className="text-[10px] font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded">
                             Pinned
                           </span>
                         )}
                         {disc.locked && (
-                          <span className="text-[10px] font-bold text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded">
+                          <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded">
                             Locked
                           </span>
                         )}
-                        <span className="text-xs font-bold text-white">{disc.title}</span>
+                        <span className="text-xs font-bold text-slate-950">{disc.title}</span>
                       </div>
-                      <p className="text-xs text-zinc-400">
-                        Author: {disc.authorName} ({disc.authorRole}) • {disc.repliesCount || 0} replies • {disc.likesCount || 0} likes
+                      <p className="text-xs text-slate-500">
+                        Author: {disc.authorName} ({disc.authorRole}) · {disc.repliesCount || 0} replies · {disc.likesCount || 0} likes
                       </p>
                     </div>
 
@@ -1692,15 +1698,15 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                             inspectingDiscussionId === disc.id ? null : disc.id
                           )
                         }
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-zinc-200"
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs text-slate-700 font-semibold"
                       >
-                        <Eye className="w-3.5 h-3.5 text-cyan-400" />
+                        <Eye className="w-3.5 h-3.5 text-blue-600" />
                         <span>Comments</span>
                       </button>
                       <button
                         onClick={() => updateDiscussion(disc.id, { pinned: !disc.pinned })}
                         className={`p-1.5 rounded-lg ${
-                          disc.pinned ? 'bg-amber-500/20 text-amber-300' : 'bg-white/5 text-zinc-400'
+                          disc.pinned ? 'bg-orange-50 text-orange-600' : 'bg-slate-100 text-slate-400'
                         }`}
                         title="Pin/Unpin"
                       >
@@ -1709,7 +1715,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                       <button
                         onClick={() => updateDiscussion(disc.id, { locked: !disc.locked })}
                         className={`p-1.5 rounded-lg ${
-                          disc.locked ? 'bg-rose-500/20 text-rose-300' : 'bg-white/5 text-zinc-400'
+                          disc.locked ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-400'
                         }`}
                         title="Lock/Unlock"
                       >
@@ -1723,21 +1729,21 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                   </div>
 
                   {inspectingDiscussionId === disc.id && (
-                    <div className="pt-3 border-t border-white/5 space-y-2">
-                      <p className="text-[11px] font-bold uppercase text-zinc-400">
+                    <div className="pt-3 border-t border-slate-100 space-y-2">
+                      <p className="text-[11px] font-bold uppercase text-slate-500">
                         Replies ({inspectedComments.length})
                       </p>
                       {inspectedComments.length === 0 ? (
-                        <p className="text-xs text-zinc-500">No replies in this thread.</p>
+                        <p className="text-xs text-slate-400">No replies in this thread.</p>
                       ) : (
                         inspectedComments.map((c) => (
                           <div
                             key={c.id}
-                            className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-start justify-between gap-3"
+                            className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-start justify-between gap-3"
                           >
                             <div>
-                              <span className="text-xs font-bold text-white">{c.authorName}</span>
-                              <p className="text-xs text-zinc-300 mt-0.5">{c.content}</p>
+                              <span className="text-xs font-bold text-slate-950">{c.authorName}</span>
+                              <p className="text-xs text-slate-700 mt-0.5">{c.content}</p>
                             </div>
                             {renderDeleteButton(`cmt-${c.id}`, async () => {
                               await deleteComment(disc.id, c.id);
@@ -1753,14 +1759,13 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
             )}
           </div>
 
-          {/* Reels Moderation */}
           <div className="space-y-3">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Film className="w-4 h-4 text-purple-400" />
+            <h2 className="font-display text-lg font-bold text-slate-950 flex items-center gap-2">
+              <Film className="w-4 h-4 text-pink-600" />
               <span>Published Reels ({reels.length})</span>
             </h2>
             {reels.length === 0 ? (
-              <div className="p-8 text-center rounded-2xl glass-panel border border-white/5 text-xs text-zinc-400">
+              <div className="p-8 text-center rounded-2xl glass-panel text-xs text-slate-500">
                 No community reels published yet.
               </div>
             ) : (
@@ -1768,17 +1773,17 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 {reels.map((reel) => (
                   <div
                     key={reel.id}
-                    className="p-4 rounded-2xl glass-panel border border-white/5 flex items-center justify-between gap-4"
+                    className="p-4 rounded-2xl glass-panel flex items-center justify-between gap-4"
                   >
                     <div className="min-w-0 space-y-0.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold uppercase text-purple-300 bg-purple-500/15 px-2 py-0.5 rounded">
+                        <span className="text-[10px] font-bold uppercase text-pink-700 bg-pink-50 px-2 py-0.5 rounded">
                           {reel.category}
                         </span>
-                        <span className="text-xs font-bold text-white truncate">{reel.title}</span>
+                        <span className="text-xs font-bold text-slate-950 truncate">{reel.title}</span>
                       </div>
-                      <p className="text-[11px] text-zinc-400">
-                        Creator: {reel.authorName} • {reel.likesCount || 0} likes • {reel.commentsCount || 0} comments • {reel.viewsCount || 0} views
+                      <p className="text-[11px] text-slate-500">
+                        Creator: {reel.authorName} · {reel.likesCount || 0} likes · {reel.commentsCount || 0} comments · {reel.viewsCount || 0} views
                       </p>
                     </div>
                     {renderDeleteButton(`reel-${reel.id}`, async () => {
@@ -1796,37 +1801,39 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       {/* TAB 6: FEEDBACK INBOX */}
       {activeAdminTab === 'feedback' && (
         <div className="space-y-4">
-          <h2 className="text-lg font-bold text-white">Contact & Feedback Inbox ({feedbackList.length})</h2>
+          <h2 className="font-display text-lg font-bold text-slate-950">
+            Contact &amp; Feedback Inbox ({feedbackList.length})
+          </h2>
           {feedbackList.length === 0 ? (
-            <div className="p-10 text-center rounded-3xl glass-panel border border-white/10 text-xs text-zinc-400">
+            <div className="p-10 text-center rounded-3xl glass-panel text-xs text-slate-500">
               No contact messages received yet.
             </div>
           ) : (
             feedbackList.map((fb) => (
               <div
                 key={fb.id}
-                className="p-5 rounded-2xl glass-panel border border-white/10 flex flex-col sm:flex-row sm:items-start justify-between gap-4"
+                className="p-5 rounded-2xl glass-panel flex flex-col sm:flex-row sm:items-start justify-between gap-4"
               >
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span
                       className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                         fb.status === 'new'
-                          ? 'bg-amber-500/20 text-amber-300'
+                          ? 'bg-orange-50 text-orange-700 border border-orange-200'
                           : fb.status === 'resolved'
-                          ? 'bg-emerald-500/20 text-emerald-300'
-                          : 'bg-white/10 text-zinc-300'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-slate-100 text-slate-600'
                       }`}
                     >
                       {fb.status}
                     </span>
-                    <span className="text-sm font-bold text-white">{fb.subject}</span>
+                    <span className="text-sm font-bold text-slate-950">{fb.subject}</span>
                   </div>
-                  <p className="text-xs text-zinc-400">
-                    From <strong className="text-zinc-200">{fb.name}</strong> ({fb.email}) •{' '}
+                  <p className="text-xs text-slate-500">
+                    From <strong className="text-slate-900">{fb.name}</strong> ({fb.email}) ·{' '}
                     {new Date(fb.createdAt).toLocaleString()}
                   </p>
-                  <p className="text-xs text-zinc-300 leading-relaxed whitespace-pre-line pt-1">
+                  <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line pt-1">
                     {fb.message}
                   </p>
                 </div>
@@ -1836,13 +1843,13 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                     <>
                       <button
                         onClick={() => updateFeedbackStatus(fb.id!, 'reviewed')}
-                        className="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] font-semibold text-zinc-200"
+                        className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-[11px] font-semibold text-slate-700"
                       >
                         Mark Reviewed
                       </button>
                       <button
                         onClick={() => updateFeedbackStatus(fb.id!, 'resolved')}
-                        className="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-[11px] font-semibold text-emerald-300"
+                        className="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-[11px] font-semibold text-emerald-700"
                       >
                         Resolve
                       </button>
@@ -1863,23 +1870,25 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       {activeAdminTab === 'users' && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <h2 className="text-lg font-bold text-white">Registered Users ({usersList.length})</h2>
+            <h2 className="font-display text-lg font-bold text-slate-950">
+              Registered Users ({usersList.length})
+            </h2>
             <input
               type="text"
               value={userSearch}
               onChange={(e) => setUserSearch(e.target.value)}
               placeholder="Search by name, email, or role..."
-              className="w-full sm:w-72 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400"
+              className="w-full sm:w-72 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-blue-500"
             />
           </div>
 
-          <div className="rounded-3xl glass-panel border border-white/10 overflow-hidden">
+          <div className="rounded-3xl glass-panel overflow-hidden">
             {filteredUsers.length === 0 ? (
-              <div className="p-10 text-center text-xs text-zinc-400">No users found.</div>
+              <div className="p-10 text-center text-xs text-slate-500">No users found.</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-white/[0.02] border-b border-white/5 text-zinc-400 font-bold uppercase tracking-wider text-[10px]">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                     <tr>
                       <th className="p-4">User</th>
                       <th className="p-4">Email</th>
@@ -1888,11 +1897,11 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                       <th className="p-4 text-right">Role</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-slate-200">
                     {filteredUsers.map((u) => {
                       const isMasterCreator = u.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
                       return (
-                        <tr key={u.uid} className="hover:bg-white/[0.02]">
+                        <tr key={u.uid} className="hover:bg-slate-50/70">
                           <td className="p-4 flex items-center gap-3">
                             <UserAvatar
                               src={u.photoURL}
@@ -1900,16 +1909,16 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                               sizeClass="w-8 h-8 text-xs"
                               className="rounded-lg"
                             />
-                            <span className="font-bold text-white">{u.displayName}</span>
+                            <span className="font-bold text-slate-950">{u.displayName}</span>
                           </td>
-                          <td className="p-4 text-zinc-400 font-mono text-[11px]">{u.email}</td>
-                          <td className="p-4 font-mono">{u.downloadsCount || 0}</td>
-                          <td className="p-4 text-zinc-400">
+                          <td className="p-4 text-slate-500 font-mono text-[11px]">{u.email}</td>
+                          <td className="p-4 font-mono text-slate-800">{u.downloadsCount || 0}</td>
+                          <td className="p-4 text-slate-500">
                             {new Date(u.joinedAt).toLocaleDateString()}
                           </td>
                           <td className="p-4 text-right">
                             {isMasterCreator ? (
-                              <span className="px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-300 font-bold text-[11px]">
+                              <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 font-bold text-[11px]">
                                 Creator
                               </span>
                             ) : (
@@ -1920,11 +1929,11 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                                   await updateUserRole(u.uid, nextRole);
                                   showToast(`Updated ${u.displayName}'s role to ${nextRole}.`, 'success');
                                 }}
-                                className="bg-white/[0.04] border border-white/10 text-white text-xs rounded-lg px-2 py-1"
+                                className="bg-slate-50 border border-slate-200 text-slate-900 text-xs rounded-lg px-2 py-1"
                               >
-                                <option value="Member" className="bg-zinc-900">Member</option>
-                                <option value="VIP" className="bg-zinc-900">VIP</option>
-                                <option value="Moderator" className="bg-zinc-900">Moderator</option>
+                                <option value="Member">Member</option>
+                                <option value="VIP">VIP</option>
+                                <option value="Moderator">Moderator</option>
                               </select>
                             )}
                           </td>
@@ -1943,36 +1952,36 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       {activeAdminTab === 'analytics' && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-5 rounded-3xl glass-panel border border-white/5">
-              <span className="text-xs text-zinc-400 font-bold uppercase">Total Visits</span>
-              <div className="text-3xl font-black text-emerald-400 font-mono mt-2">
+            <div className="p-5 rounded-3xl glass-panel">
+              <span className="text-xs text-slate-500 font-bold uppercase">Total Visits</span>
+              <div className="font-display text-3xl font-black text-emerald-600 font-mono mt-2">
                 {siteVisits.toLocaleString()}
               </div>
             </div>
-            <div className="p-5 rounded-3xl glass-panel border border-white/5">
-              <span className="text-xs text-zinc-400 font-bold uppercase">Total Downloads</span>
-              <div className="text-3xl font-black text-white font-mono mt-2">
+            <div className="p-5 rounded-3xl glass-panel">
+              <span className="text-xs text-slate-500 font-bold uppercase">Total Downloads</span>
+              <div className="font-display text-3xl font-black text-blue-600 font-mono mt-2">
                 {totalDownloads.toLocaleString()}
               </div>
             </div>
-            <div className="p-5 rounded-3xl glass-panel border border-white/5">
-              <span className="text-xs text-zinc-400 font-bold uppercase">Registered Users</span>
-              <div className="text-3xl font-black text-purple-400 font-mono mt-2">
+            <div className="p-5 rounded-3xl glass-panel">
+              <span className="text-xs text-slate-500 font-bold uppercase">Registered Users</span>
+              <div className="font-display text-3xl font-black text-pink-600 font-mono mt-2">
                 {usersList.length.toLocaleString()}
               </div>
             </div>
-            <div className="p-5 rounded-3xl glass-panel border border-white/5">
-              <span className="text-xs text-zinc-400 font-bold uppercase">Forum Threads</span>
-              <div className="text-3xl font-black text-cyan-400 font-mono mt-2">
+            <div className="p-5 rounded-3xl glass-panel">
+              <span className="text-xs text-slate-500 font-bold uppercase">Forum Threads</span>
+              <div className="font-display text-3xl font-black text-orange-500 font-mono mt-2">
                 {discussions.length.toLocaleString()}
               </div>
             </div>
           </div>
 
-          <div className="p-6 rounded-3xl glass-panel border border-white/10 space-y-4">
-            <h3 className="text-sm font-bold text-white">Top Downloaded Resources</h3>
+          <div className="p-6 rounded-3xl glass-panel space-y-4">
+            <h3 className="font-display text-sm font-bold text-slate-950">Top Downloaded Resources</h3>
             {topResources.length === 0 ? (
-              <p className="text-xs text-zinc-500">No resources published yet.</p>
+              <p className="text-xs text-slate-500">No resources published yet.</p>
             ) : (
               <div className="space-y-3">
                 {topResources.map((r) => {
@@ -1980,14 +1989,14 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                   return (
                     <div key={r.id} className="space-y-1">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-white">{r.title}</span>
-                        <span className="font-mono text-purple-300">
+                        <span className="font-semibold text-slate-950">{r.title}</span>
+                        <span className="font-mono font-semibold text-blue-600">
                           {(r.downloadsCount || 0).toLocaleString()} downloads
                         </span>
                       </div>
-                      <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden">
+                      <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-purple-600 to-cyan-500"
+                          className="h-full rounded-full bg-gradient-to-r from-blue-600 via-pink-500 to-orange-500"
                           style={{ width: `${Math.max(4, pct)}%` }}
                         />
                       </div>

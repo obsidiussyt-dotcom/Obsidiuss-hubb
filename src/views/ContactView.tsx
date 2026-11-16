@@ -56,34 +56,34 @@ export const ContactView: React.FC<ContactViewProps> = ({ onOpenRules }) => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-10">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-10 animate-fade-up">
       <div className="space-y-2 text-center max-w-2xl mx-auto">
-        <p className="text-xs font-semibold tracking-wider uppercase text-cyan-400">
+        <p className="text-xs font-semibold tracking-wider uppercase text-blue-600">
           Direct Contact · Bhaskar Yadav (Obsidiuss)
         </p>
-        <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
+        <h1 className="font-display text-3xl sm:text-5xl font-black text-slate-950 tracking-tight">
           Contact Owner
         </h1>
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-slate-600">
           Send a bug report, feature suggestion, or collaboration inquiry directly to Bhaskar Yadav.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8">
-        <div className="lg:col-span-3 rounded-3xl glass-panel border border-white/10 p-6 sm:p-8">
+        <div className="lg:col-span-3 rounded-3xl glass-panel p-6 sm:p-8">
           {submitted ? (
             <div className="py-10 text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
-              <h3 className="text-xl font-bold text-white">Message Sent</h3>
-              <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+              <h3 className="font-display text-xl font-bold text-slate-950">Message Sent</h3>
+              <p className="text-xs text-slate-600 max-w-sm mx-auto">
                 Your message has been delivered to Bhaskar Yadav (Obsidiuss).
               </p>
               <button
                 type="button"
                 onClick={() => setSubmitted(false)}
-                className="min-h-[42px] px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition"
+                className="min-h-[42px] px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition"
               >
                 Send Another Message
               </button>
@@ -92,7 +92,7 @@ export const ContactView: React.FC<ContactViewProps> = ({ onOpenRules }) => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                     Your Name
                   </label>
                   <input
@@ -101,12 +101,12 @@ export const ContactView: React.FC<ContactViewProps> = ({ onOpenRules }) => {
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Your name"
                     required
-                    className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-purple-500"
+                    className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                     Email Address
                   </label>
                   <input
@@ -115,13 +115,13 @@ export const ContactView: React.FC<ContactViewProps> = ({ onOpenRules }) => {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@domain.com"
                     required
-                    className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-purple-500"
+                    className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Subject
                 </label>
                 <input
@@ -130,12 +130,12 @@ export const ContactView: React.FC<ContactViewProps> = ({ onOpenRules }) => {
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="Bug report, request, or inquiry"
                   required
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-purple-500"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Message
                 </label>
                 <textarea
@@ -144,14 +144,14 @@ export const ContactView: React.FC<ContactViewProps> = ({ onOpenRules }) => {
                   rows={5}
                   placeholder="Write your message..."
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-purple-500 resize-none"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 resize-none"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full min-h-[46px] flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-bold shadow-lg shadow-purple-900/30 transition active:scale-[0.99] disabled:opacity-50"
+                className="w-full min-h-[46px] flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-blue-600 via-sky-500 to-blue-600 hover:from-blue-700 hover:to-sky-600 text-white text-sm font-bold shadow-md shadow-blue-600/20 transition active:scale-[0.99] disabled:opacity-50"
               >
                 <Send className="w-4 h-4" />
                 <span>{submitting ? 'Sending...' : 'Send Message'}</span>
@@ -161,38 +161,38 @@ export const ContactView: React.FC<ContactViewProps> = ({ onOpenRules }) => {
         </div>
 
         <div className="lg:col-span-2 space-y-4">
-          <div className="p-6 rounded-3xl glass-panel border border-[#5865F2]/30 bg-[#5865F2]/10 space-y-3">
-            <div className="flex items-center gap-2 text-[#9ba5ff]">
+          <div className="p-6 rounded-3xl bg-indigo-50/70 border border-indigo-200 space-y-3">
+            <div className="flex items-center gap-2 text-indigo-700">
               <MessageSquare className="w-5 h-5" />
               <h3 className="text-sm font-bold">Discord Support</h3>
             </div>
-            <p className="text-xs text-zinc-300 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               Join the official OBSIDIUSS Discord server for quick help and updates.
             </p>
             <a
               href="https://discord.com/invite/aAgf7bnCNd"
               target="_blank"
               rel="noopener noreferrer"
-              className="min-h-[42px] inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] text-white text-xs font-bold transition"
+              className="min-h-[42px] inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] text-white text-xs font-bold shadow-sm transition"
             >
               <span>Join Discord</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
 
-          <div className="p-6 rounded-3xl glass-panel border border-white/5 space-y-3 text-xs text-zinc-400">
-            <h4 className="font-bold text-white text-sm">Owner</h4>
-            <p className="flex items-center gap-2 text-zinc-300">
-              <Mail className="w-4 h-4 text-cyan-400 shrink-0" />
+          <div className="p-6 rounded-3xl glass-panel space-y-3 text-xs text-slate-600">
+            <h4 className="font-bold text-slate-950 text-sm">Owner</h4>
+            <p className="flex items-center gap-2 text-slate-800 font-medium">
+              <Mail className="w-4 h-4 text-blue-600 shrink-0" />
               <span>Bhaskar Yadav (Obsidiuss)</span>
             </p>
             {onOpenRules && (
               <button
                 type="button"
                 onClick={onOpenRules}
-                className="min-h-[42px] w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-200 transition text-left"
+                className="min-h-[42px] w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold transition text-left"
               >
-                <BookOpen className="w-4 h-4 text-purple-400" />
+                <BookOpen className="w-4 h-4 text-pink-500" />
                 <span>Read Community Rules</span>
               </button>
             )}

@@ -29,14 +29,14 @@ export class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#08090d] text-zinc-100 flex items-center justify-center p-6">
-          <div className="max-w-md w-full rounded-3xl glass-panel border border-rose-500/25 p-8 text-center space-y-5 bg-[#0e0f17]">
-            <div className="w-16 h-16 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto">
+        <div className="min-h-screen bg-[#f8faff] text-slate-900 flex items-center justify-center p-6">
+          <div className="max-w-md w-full rounded-3xl bg-white border border-rose-200 shadow-xl p-8 text-center space-y-5 animate-modal-pop">
+            <div className="w-16 h-16 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mx-auto">
               <AlertTriangle className="w-8 h-8" />
             </div>
             <div className="space-y-2">
-              <h1 className="text-xl font-extrabold text-white">Something went wrong</h1>
-              <p className="text-xs text-zinc-400 leading-relaxed">
+              <h1 className="font-display text-xl font-extrabold text-slate-950">Something went wrong</h1>
+              <p className="text-xs text-slate-600 leading-relaxed">
                 OBSIDIUSS HUB hit an unexpected rendering issue. You can reload the page or return
                 home.
               </p>
@@ -44,7 +44,7 @@ export class ErrorBoundary extends React.Component<
             <div className="flex items-center justify-center gap-3 pt-2">
               <button
                 onClick={() => window.location.reload()}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Reload Page</span>
@@ -52,9 +52,9 @@ export class ErrorBoundary extends React.Component<
               <a
                 href="/"
                 onClick={() => this.setState({ hasError: false, errorMessage: '' })}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-zinc-200 text-xs font-semibold transition"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 text-xs font-semibold transition"
               >
-                <Home className="w-3.5 h-3.5" />
+                <Home className="w-3.5 h-3.5 text-blue-600" />
                 <span>Go Home</span>
               </a>
             </div>

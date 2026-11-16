@@ -390,11 +390,13 @@ function MainApp() {
 
   if (authLoading) {
     return (
-      <div className="min-h-[100dvh] bg-[#06070c] text-zinc-100 flex flex-col items-center justify-center gap-4 p-6">
-        <BrandLogo size={56} className="animate-pulse" />
+      <div className="min-h-[100dvh] bg-[#f8faff] text-slate-900 flex flex-col items-center justify-center gap-4 p-6">
+        <BrandLogo size={58} className="animate-pulse" />
         <div className="text-center space-y-1">
-          <p className="text-sm font-black tracking-widest text-white">OBSIDIUSS HUB</p>
-          <p className="text-xs text-zinc-500">By Bhaskar Yadav</p>
+          <p className="font-display text-sm font-black tracking-widest text-slate-950">
+            OBSIDIUSS HUB
+          </p>
+          <p className="text-xs text-slate-500">By Bhaskar Yadav</p>
         </div>
       </div>
     );
@@ -402,7 +404,7 @@ function MainApp() {
 
   if (!user) {
     return (
-      <div className="min-h-[100dvh] bg-[#06070c] text-zinc-100 flex flex-col selection:bg-purple-500/30 selection:text-purple-200">
+      <div className="min-h-[100dvh] bg-[#f8faff] text-slate-900 flex flex-col selection:bg-blue-500/20 selection:text-blue-900">
         <SignInView
           isGate
           onNavigate={navigateTo}
@@ -418,10 +420,10 @@ function MainApp() {
   }
 
   return (
-    <div className="min-h-screen bg-[#06070c] text-zinc-100 flex flex-col selection:bg-purple-500/30 selection:text-purple-200">
+    <div className="min-h-screen bg-[#f8faff] text-slate-900 flex flex-col selection:bg-blue-500/20 selection:text-blue-900">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:rounded-xl focus:bg-purple-600 focus:text-white focus:text-xs focus:font-bold"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:rounded-xl focus:bg-blue-600 focus:text-white focus:text-xs focus:font-bold"
       >
         Skip to main content
       </a>
@@ -435,12 +437,12 @@ function MainApp() {
       />
 
       {!isVerifiedUser && (
-        <div className="border-b border-amber-500/20 bg-amber-500/10 px-4 py-2 text-center text-xs text-amber-200 flex flex-wrap items-center justify-center gap-2">
+        <div className="border-b border-orange-200 bg-orange-50 px-4 py-2 text-center text-xs text-orange-900 flex flex-wrap items-center justify-center gap-2">
           <span>Verify your email address to post in Live Chat, DMs, Reels, and Forum.</span>
           <button
             type="button"
             onClick={() => setIsAuthOpen(true)}
-            className="font-bold underline text-white hover:text-amber-200"
+            className="font-bold underline text-orange-700 hover:text-orange-950"
           >
             Verify now
           </button>
@@ -572,7 +574,7 @@ function MainApp() {
       {showScrollTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-20 lg:bottom-6 right-4 sm:right-6 z-40 p-3 rounded-2xl bg-[#12131f]/90 hover:bg-purple-600 text-zinc-200 hover:text-white border border-white/10 shadow-xl backdrop-blur-md transition active:scale-95"
+          className="fixed bottom-20 lg:bottom-6 right-4 sm:right-6 z-40 p-3 rounded-2xl bg-white/95 hover:bg-blue-600 text-slate-700 hover:text-white border border-slate-200 hover:border-blue-600 shadow-lg backdrop-blur-md transition active:scale-95"
           aria-label="Scroll to top"
           title="Back to top"
         >

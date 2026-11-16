@@ -19,18 +19,20 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
     setImgError(false);
   }, [src]);
 
-  const initials = name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() || '')
-    .join('') || 'Ω';
+  const initials =
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() || '')
+      .join('') || 'O';
 
   if (src && !imgError) {
     return (
       <img
         src={src}
         alt={name}
+        referrerPolicy="no-referrer"
         onError={() => setImgError(true)}
         className={`${sizeClass} object-cover shrink-0 ${className}`}
       />
@@ -40,7 +42,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
   return (
     <div
       aria-label={name}
-      className={`${sizeClass} shrink-0 bg-gradient-to-br from-purple-600/80 via-indigo-600/80 to-cyan-500/80 flex items-center justify-center font-extrabold text-white select-none ${className}`}
+      className={`${sizeClass} shrink-0 bg-gradient-to-br from-blue-600 via-sky-500 to-pink-500 flex items-center justify-center font-extrabold text-white select-none ${className}`}
     >
       {initials}
     </div>

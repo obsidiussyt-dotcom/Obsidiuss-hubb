@@ -21,12 +21,13 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   return (
     <nav
       aria-label="Mobile quick navigation"
-      className="lg:hidden fixed bottom-0 inset-x-0 z-40 h-14 bg-[#06070c]/95 backdrop-blur-xl border-t border-white/10 grid grid-cols-5 items-center px-1"
+      className="lg:hidden fixed bottom-0 inset-x-0 z-40 h-14 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 shadow-[0_-6px_20px_-8px_rgba(37,99,235,0.12)] grid grid-cols-5 items-center px-1"
     >
       {items.map((item) => {
         const Icon = item.icon;
         const active =
           currentTab === item.id || (item.id === 'chat' && currentTab === 'dms');
+        const isReels = item.id === 'reels';
         return (
           <button
             key={item.id}
@@ -35,11 +36,15 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               setCurrentTab(item.id);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className={`min-h-[44px] flex flex-col items-center justify-center gap-0.5 rounded-xl transition ${
-              active ? 'text-cyan-400' : 'text-zinc-400 hover:text-zinc-200'
+            className={`min-h-[44px] flex flex-col items-center justify-center gap-0.5 rounded-xl transition active:scale-95 ${
+              active
+                ? isReels
+                  ? 'text-pink-600'
+                  : 'text-blue-600'
+                : 'text-slate-500 hover:text-slate-900'
             }`}
           >
-            <Icon className="w-[18px] h-[18px]" />
+            <Icon className={`w-[19px] h-[19px] ${active ? 'scale-110 transition-transform' : ''}`} />
             <span className="text-[10px] font-semibold tracking-tight whitespace-nowrap">
               {item.label}
             </span>

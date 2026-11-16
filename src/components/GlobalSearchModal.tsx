@@ -32,7 +32,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         onClose();
       }
@@ -103,49 +103,53 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-slate-950/45 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-2xl glass-panel rounded-3xl border border-white/10 shadow-2xl bg-[#0c0d15] text-zinc-200 overflow-hidden"
+        className="relative w-full max-w-2xl rounded-3xl border border-slate-200 shadow-2xl bg-white text-slate-800 overflow-hidden animate-modal-pop"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-4 border-b border-white/10 flex items-center gap-3">
-          <Search className="w-5 h-5 text-purple-400 shrink-0" />
+        <div className="p-4 border-b border-slate-200 flex items-center gap-3">
+          <Search className="w-5 h-5 text-blue-600 shrink-0" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search resources, projects, announcements, or discussions..."
+            placeholder="Search resources, reels, projects, announcements, or forum..."
             autoFocus
-            className="w-full bg-transparent text-white placeholder-zinc-500 text-sm focus:outline-none"
+            className="w-full bg-transparent text-slate-950 placeholder-slate-400 text-sm focus:outline-none"
           />
           {searchTerm && (
-            <button onClick={() => setSearchTerm('')} className="p-1 text-zinc-400 hover:text-white">
+            <button
+              onClick={() => setSearchTerm('')}
+              className="p-1 text-slate-400 hover:text-slate-900"
+              aria-label="Clear search"
+            >
               <X className="w-4 h-4" />
             </button>
           )}
-          <kbd className="px-2 py-0.5 text-[10px] font-mono bg-white/10 rounded text-zinc-400">
+          <kbd className="px-2 py-0.5 text-[10px] font-mono bg-slate-100 border border-slate-200 rounded text-slate-500">
             ESC
           </kbd>
         </div>
 
         <div className="max-h-[60vh] overflow-y-auto p-4 space-y-6">
           {!searchTerm.trim() ? (
-            <div className="py-8 text-center text-zinc-500 text-xs">
-              <p className="font-semibold text-zinc-400">Search across OBSIDIUSS HUB</p>
-              <p className="mt-1">Enter keywords to search resources, projects, updates, and forum posts.</p>
+            <div className="py-8 text-center text-slate-500 text-xs">
+              <p className="font-semibold text-slate-700">Search across OBSIDIUSS HUB</p>
+              <p className="mt-1">Enter keywords to search resources, reels, projects, updates, and forum posts.</p>
             </div>
           ) : totalResults === 0 ? (
-            <div className="py-8 text-center text-zinc-500 text-xs">
-              <p>No results found for "{searchTerm}"</p>
-              <p className="mt-1 text-zinc-600">Try checking spelling or use broader keywords.</p>
+            <div className="py-8 text-center text-slate-500 text-xs">
+              <p className="font-semibold text-slate-700">No results found for "{searchTerm}"</p>
+              <p className="mt-1 text-slate-400">Try checking spelling or use broader keywords.</p>
             </div>
           ) : (
             <>
               {searchResults.resources.length > 0 && (
                 <div>
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-purple-400 mb-2 flex items-center gap-1.5">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-blue-600 mb-2 flex items-center gap-1.5">
                     <Download className="w-3.5 h-3.5" /> Downloads & Resources
                   </h4>
                   <div className="space-y-1.5">
@@ -156,7 +160,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                           onSelectResource(res);
                           onClose();
                         }}
-                        className="w-full flex items-center justify-between p-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/5 transition text-left group"
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50 hover:bg-blue-50/70 border border-slate-200/80 hover:border-blue-200 transition text-left group"
                       >
                         <div className="flex items-center gap-3">
                           {res.thumbnailUrl ? (
@@ -166,80 +170,20 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                               className="w-9 h-9 rounded-lg object-cover"
                             />
                           ) : (
-                            <div className="w-9 h-9 rounded-lg bg-purple-500/20 flex items-center justify-center shrink-0">
-                              <Download className="w-4 h-4 text-purple-400" />
+                            <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                              <Download className="w-4 h-4 text-blue-600" />
                             </div>
                           )}
                           <div>
-                            <p className="text-xs font-bold text-white group-hover:text-purple-300 transition">
+                            <p className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition">
                               {res.title}
                             </p>
-                            <p className="text-[11px] text-zinc-400">
-                              {res.category.toUpperCase()} • {res.version} • {res.fileSize}
+                            <p className="text-[11px] text-slate-500">
+                              {res.category.toUpperCase()} · {res.version} · {res.fileSize}
                             </p>
                           </div>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-purple-400 transition" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {searchResults.projects.length > 0 && (
-                <div>
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 mb-2 flex items-center gap-1.5">
-                    <FolderGit2 className="w-3.5 h-3.5" /> Projects
-                  </h4>
-                  <div className="space-y-1.5">
-                    {searchResults.projects.map((proj) => (
-                      <button
-                        key={proj.id}
-                        onClick={() => {
-                          onNavigateTab('projects');
-                          onClose();
-                        }}
-                        className="w-full flex items-center justify-between p-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/5 transition text-left group"
-                      >
-                        <div>
-                          <p className="text-xs font-bold text-white group-hover:text-indigo-300 transition">
-                            {proj.title}
-                          </p>
-                          <p className="text-[11px] text-zinc-400 truncate max-w-md">
-                            {proj.tagline}
-                          </p>
-                        </div>
-                        <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-indigo-400 transition" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {searchResults.discussions.length > 0 && (
-                <div>
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-cyan-400 mb-2 flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5" /> Community Discussions
-                  </h4>
-                  <div className="space-y-1.5">
-                    {searchResults.discussions.map((disc) => (
-                      <button
-                        key={disc.id}
-                        onClick={() => {
-                          onNavigateTab('community', { threadId: disc.id });
-                          onClose();
-                        }}
-                        className="w-full flex items-center justify-between p-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/5 transition text-left group"
-                      >
-                        <div>
-                          <p className="text-xs font-bold text-white group-hover:text-cyan-300 transition">
-                            {disc.title}
-                          </p>
-                          <p className="text-[11px] text-zinc-400">
-                            By {disc.authorName} • {disc.repliesCount || 0} replies • {disc.likesCount || 0} likes
-                          </p>
-                        </div>
-                        <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-cyan-400 transition" />
+                        <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition" />
                       </button>
                     ))}
                   </div>
@@ -248,7 +192,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
 
               {searchResults.reels.length > 0 && (
                 <div>
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-rose-400 mb-2 flex items-center gap-1.5">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-pink-600 mb-2 flex items-center gap-1.5">
                     <Film className="w-3.5 h-3.5" /> Reels
                   </h4>
                   <div className="space-y-1.5">
@@ -259,17 +203,77 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                           onNavigateTab('reels', { reelId: reel.id });
                           onClose();
                         }}
-                        className="w-full flex items-center justify-between p-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/5 transition text-left group"
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50 hover:bg-pink-50/70 border border-slate-200/80 hover:border-pink-200 transition text-left group"
                       >
                         <div>
-                          <p className="text-xs font-bold text-white group-hover:text-rose-300 transition">
+                          <p className="text-xs font-bold text-slate-900 group-hover:text-pink-600 transition">
                             {reel.title}
                           </p>
-                          <p className="text-[11px] text-zinc-400">
+                          <p className="text-[11px] text-slate-500">
                             {reel.category} · By {reel.authorName}
                           </p>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-rose-400 transition" />
+                        <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-pink-600 transition" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {searchResults.projects.length > 0 && (
+                <div>
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-sky-600 mb-2 flex items-center gap-1.5">
+                    <FolderGit2 className="w-3.5 h-3.5" /> Projects
+                  </h4>
+                  <div className="space-y-1.5">
+                    {searchResults.projects.map((proj) => (
+                      <button
+                        key={proj.id}
+                        onClick={() => {
+                          onNavigateTab('projects');
+                          onClose();
+                        }}
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50 hover:bg-sky-50/70 border border-slate-200/80 hover:border-sky-200 transition text-left group"
+                      >
+                        <div>
+                          <p className="text-xs font-bold text-slate-900 group-hover:text-sky-700 transition">
+                            {proj.title}
+                          </p>
+                          <p className="text-[11px] text-slate-500 truncate max-w-md">
+                            {proj.tagline}
+                          </p>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-sky-600 transition" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {searchResults.discussions.length > 0 && (
+                <div>
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-blue-700 mb-2 flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5" /> Community Discussions
+                  </h4>
+                  <div className="space-y-1.5">
+                    {searchResults.discussions.map((disc) => (
+                      <button
+                        key={disc.id}
+                        onClick={() => {
+                          onNavigateTab('community', { threadId: disc.id });
+                          onClose();
+                        }}
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50 hover:bg-blue-50/70 border border-slate-200/80 hover:border-blue-200 transition text-left group"
+                      >
+                        <div>
+                          <p className="text-xs font-bold text-slate-900 group-hover:text-blue-700 transition">
+                            {disc.title}
+                          </p>
+                          <p className="text-[11px] text-slate-500">
+                            By {disc.authorName} · {disc.repliesCount || 0} replies · {disc.likesCount || 0} likes
+                          </p>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition" />
                       </button>
                     ))}
                   </div>
@@ -278,8 +282,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
 
               {searchResults.announcements.length > 0 && (
                 <div>
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-amber-400 mb-2 flex items-center gap-1.5">
-                    <Bell className="w-3.5 h-3.5" /> Announcements
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-orange-600 mb-2 flex items-center gap-1.5">
+                    <Bell className="w-3.5 h-3.5" /> Devlogs & Updates
                   </h4>
                   <div className="space-y-1.5">
                     {searchResults.announcements.map((ann) => (
@@ -289,17 +293,17 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                           onNavigateTab('announcements');
                           onClose();
                         }}
-                        className="w-full flex items-center justify-between p-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/5 transition text-left group"
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50 hover:bg-orange-50/70 border border-slate-200/80 hover:border-orange-200 transition text-left group"
                       >
                         <div>
-                          <p className="text-xs font-bold text-white group-hover:text-amber-300 transition">
+                          <p className="text-xs font-bold text-slate-900 group-hover:text-orange-600 transition">
                             {ann.title}
                           </p>
-                          <p className="text-[11px] text-zinc-400 truncate max-w-md">
+                          <p className="text-[11px] text-slate-500 truncate max-w-md">
                             {ann.excerpt}
                           </p>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-amber-400 transition" />
+                        <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-orange-600 transition" />
                       </button>
                     ))}
                   </div>

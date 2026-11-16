@@ -1,42 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="512" height="512" fill="none">
+<svg width="512" height="512" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bgGrad" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#090a14" />
-      <stop offset="100%" stop-color="#121428" />
+    <linearGradient id="bg" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="55%" stop-color="#1e3a8a" />
+      <stop offset="100%" stop-color="#1d4ed8" />
     </linearGradient>
-    <linearGradient id="frameGrad" x1="4" y1="4" x2="60" y2="60" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#a78bfa" />
-      <stop offset="50%" stop-color="#6366f1" />
-      <stop offset="100%" stop-color="#22d3ee" />
+    <linearGradient id="frame" x1="4" y1="4" x2="60" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="50%" stop-color="#ec4899" />
+      <stop offset="100%" stop-color="#f97316" />
     </linearGradient>
     <linearGradient id="ftl" x1="16" y1="10" x2="32" y2="34" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#ffffff" />
-      <stop offset="100%" stop-color="#c4b5fd" />
+      <stop offset="100%" stop-color="#dbeafe" />
     </linearGradient>
     <linearGradient id="ftr" x1="32" y1="10" x2="48" y2="34" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#67e8f9" />
+      <stop offset="0%" stop-color="#60a5fa" />
       <stop offset="100%" stop-color="#38bdf8" />
     </linearGradient>
     <linearGradient id="fbl" x1="16" y1="32" x2="32" y2="54" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#818cf8" />
-      <stop offset="100%" stop-color="#4338ca" />
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#1d4ed8" />
     </linearGradient>
     <linearGradient id="fbr" x1="32" y1="32" x2="48" y2="54" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#0891b2" />
-      <stop offset="100%" stop-color="#1e1b4b" />
-    </linearGradient>
-    <linearGradient id="core" x1="26" y1="24" x2="38" y2="40" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#ffffff" />
-      <stop offset="100%" stop-color="#22d3ee" />
+      <stop offset="0%" stop-color="#ec4899" />
+      <stop offset="100%" stop-color="#f97316" />
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="14" fill="#06070c" />
-  <path d="M32 5L55 18.5V45.5L32 59L9 45.5V18.5L32 5Z" fill="url(#bgGrad)" stroke="url(#frameGrad)" stroke-width="2.4" stroke-linejoin="round" />
+  <path d="M32 3L57 17.5V46.5L32 61L7 46.5V17.5L32 3Z" fill="url(#bg)" stroke="url(#frame)" stroke-width="2.6" stroke-linejoin="round" />
+  <path d="M32 7.5L53 19.6V44.4L32 56.5L11 44.4V19.6L32 7.5Z" stroke="rgba(255,255,255,0.22)" stroke-width="1" stroke-linejoin="round" />
   <polygon points="32,12 17,32 32,26" fill="url(#ftl)" />
   <polygon points="32,12 47,32 32,26" fill="url(#ftr)" />
   <polygon points="17,32 32,52 32,38" fill="url(#fbl)" />
   <polygon points="47,32 32,52 32,38" fill="url(#fbr)" />
-  <polygon points="32,23 39,32 32,41 25,32" fill="url(#core)" />
-  <polygon points="32,26.5 36,32 32,37.5 28,32" fill="#070810" />
+  <polygon points="32,23 39,32 32,41 25,32" fill="#ffffff" />
+  <polygon points="32,26.5 36,32 32,37.5 28,32" fill="#0f172a" />
   <polygon points="32,29 34,32 32,35 30,32" fill="#ffffff" />
 </svg>

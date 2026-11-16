@@ -95,26 +95,30 @@ export const ReportModal: React.FC<ReportModalProps> = ({
       : 'Resource';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
       <div
-        className="relative w-full max-w-md glass-panel rounded-3xl border border-white/10 shadow-2xl bg-[#0d0e17] text-zinc-200 overflow-hidden"
+        className="relative w-full max-w-md rounded-3xl border border-slate-200 shadow-2xl bg-white text-slate-800 overflow-hidden animate-modal-pop"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-white/5 flex items-center justify-between">
+        <div className="p-6 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30">
+            <div className="p-2 rounded-xl bg-pink-50 text-pink-600 border border-pink-200">
               <Flag className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">Report {targetTypeLabel}</h3>
-              <p className="text-xs text-zinc-400 truncate max-w-[240px]">
+              <h3 className="font-display text-sm font-bold text-slate-950">Report {targetTypeLabel}</h3>
+              <p className="text-xs text-slate-500 truncate max-w-[240px]">
                 Target: {targetTitle}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg bg-white/5 text-zinc-400 hover:text-white"
+            className="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:text-slate-900"
+            aria-label="Close"
           >
             <X className="w-4 h-4" />
           </button>
@@ -122,15 +126,15 @@ export const ReportModal: React.FC<ReportModalProps> = ({
 
         {!profile ? (
           <div className="p-6 space-y-4 text-center">
-            <ShieldAlert className="w-8 h-8 text-amber-400 mx-auto" />
-            <p className="text-xs text-zinc-300 leading-relaxed">
-              Sign in with Google to submit verified moderation reports and help keep the community safe.
+            <ShieldAlert className="w-8 h-8 text-orange-500 mx-auto" />
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Sign in to submit verified moderation reports and help keep the community safe.
             </p>
             <div className="flex justify-center gap-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-900"
               >
                 Cancel
               </button>
@@ -140,34 +144,34 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                   onClose();
                   openAuth?.();
                 }}
-                className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition"
+                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition"
               >
-                Sign In with Google
+                Sign In
               </button>
             </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Reason for Report
               </label>
               <select
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-purple-500"
+                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
               >
-                <option value="Broken download link" className="bg-zinc-900">Broken or offline download link</option>
-                <option value="Malicious or corrupted file" className="bg-zinc-900">Malicious or corrupted file</option>
-                <option value="Outdated or misleading version" className="bg-zinc-900">Outdated or misleading version</option>
-                <option value="Inappropriate language or harassment" className="bg-zinc-900">Inappropriate language or harassment</option>
-                <option value="Spam or unauthorized advertising" className="bg-zinc-900">Spam or unauthorized advertising</option>
-                <option value="Other concern" className="bg-zinc-900">Other concern</option>
+                <option value="Broken download link">Broken or offline download link</option>
+                <option value="Malicious or corrupted file">Malicious or corrupted file</option>
+                <option value="Outdated or misleading version">Outdated or misleading version</option>
+                <option value="Inappropriate language or harassment">Inappropriate language or harassment</option>
+                <option value="Spam or unauthorized advertising">Spam or unauthorized advertising</option>
+                <option value="Other concern">Other concern</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Additional Details (Optional)
               </label>
               <textarea
@@ -176,7 +180,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 rows={3}
                 maxLength={1000}
                 placeholder="Provide extra context to help our administrators investigate..."
-                className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-purple-500 resize-none"
+                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 resize-none"
               />
             </div>
 
@@ -184,14 +188,14 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-900"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition disabled:opacity-50"
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white text-xs font-bold shadow-sm transition disabled:opacity-50"
               >
                 {submitting ? 'Submitting...' : 'Send Report'}
               </button>

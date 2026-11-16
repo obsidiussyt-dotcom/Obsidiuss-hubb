@@ -69,10 +69,10 @@ export const PWAInstallButton: React.FC = () => {
     return (
       <button
         onClick={install}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-200 text-xs font-semibold transition"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold transition"
         title="Install OBSIDIUSS HUB as an app"
       >
-        <Download className="w-3.5 h-3.5 text-purple-300" />
+        <Download className="w-3.5 h-3.5 text-blue-600" />
         <span>Install App</span>
       </button>
     );
@@ -83,38 +83,38 @@ export const PWAInstallButton: React.FC = () => {
       <>
         <button
           onClick={() => setShowIOSGuide(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-200 text-xs font-semibold transition"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-semibold transition"
         >
-          <Smartphone className="w-3.5 h-3.5 text-cyan-400" />
+          <Smartphone className="w-3.5 h-3.5 text-blue-600" />
           <span>Install on iOS</span>
         </button>
 
         {showIOSGuide && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 backdrop-blur-sm p-4"
             onClick={() => setShowIOSGuide(false)}
           >
             <div
-              className="w-full max-w-sm rounded-3xl glass-panel border border-white/10 bg-[#0d0e17] p-6 space-y-4"
+              className="w-full max-w-sm rounded-3xl bg-white border border-slate-200 shadow-2xl p-6 space-y-4 animate-modal-pop"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-white">Install on iPhone / iPad</h3>
+                <h3 className="font-display text-base font-bold text-slate-950">Install on iPhone / iPad</h3>
                 <button
                   onClick={() => setShowIOSGuide(false)}
-                  className="p-1 text-zinc-400 hover:text-white"
+                  className="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:text-slate-900"
                   aria-label="Close"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <ol className="text-xs text-zinc-300 space-y-2 list-decimal pl-4 leading-relaxed">
-                <li>Tap the <strong>Share</strong> icon in the Safari toolbar.</li>
-                <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
+              <ol className="text-xs text-slate-600 space-y-2 list-decimal pl-4 leading-relaxed">
+                <li>Tap the <strong className="text-slate-900">Share</strong> icon in the Safari toolbar.</li>
+                <li>Scroll down and tap <strong className="text-slate-900">Add to Home Screen</strong>.</li>
               </ol>
               <button
                 onClick={() => setShowIOSGuide(false)}
-                className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition"
+                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition"
               >
                 Got it
               </button>
@@ -147,8 +147,8 @@ export const OfflineBanner: React.FC = () => {
   if (isOnline) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-bold text-black shadow-xl">
-      <span className="h-2 w-2 rounded-full bg-black animate-pulse" />
+    <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 rounded-xl bg-orange-500 px-3.5 py-2 text-xs font-bold text-white shadow-xl">
+      <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
       <span>Offline — Showing cached app shell</span>
     </div>
   );

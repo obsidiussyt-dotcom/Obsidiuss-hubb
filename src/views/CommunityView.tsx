@@ -20,7 +20,7 @@ import {
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Discussion, Comment } from '../types';
+import { Comment } from '../types';
 import { CreateDiscussionModal } from '../components/CreateDiscussionModal';
 import { UserAvatar } from '../components/UserAvatar';
 import type { NavigateOptions } from '../App';
@@ -69,7 +69,6 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
   const [newCommentText, setNewCommentText] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
 
-  // Edit thread state
   const [isEditingThread, setIsEditingThread] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
@@ -127,7 +126,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
   const handleLikeDiscussion = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!profile) {
-      showToast('Sign in with Google to like discussions.', 'info');
+      showToast('Sign in to like discussions.', 'info');
       openAuth();
       return;
     }
@@ -193,63 +192,63 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
     const isLiked = likedDiscussionIds.has(selectedDiscussion.id);
 
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6 animate-fade-up">
         <button
           onClick={() => {
             selectDiscussion(null);
             setIsEditingThread(false);
             setConfirmDeleteThread(false);
           }}
-          className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-white transition px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/5 w-fit"
+          className="flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-slate-950 transition px-3.5 py-2 rounded-xl bg-white border border-slate-200 shadow-sm w-fit"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to All Discussions</span>
         </button>
 
         {/* Main Thread Card */}
-        <div className="rounded-3xl glass-panel border border-white/10 p-6 sm:p-8 space-y-6">
+        <div className="rounded-3xl glass-panel p-6 sm:p-8 space-y-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-center gap-3">
               <UserAvatar
                 src={selectedDiscussion.authorAvatar}
                 name={selectedDiscussion.authorName}
                 sizeClass="w-11 h-11 text-sm"
-                className="rounded-2xl ring-2 ring-purple-500/40"
+                className="rounded-2xl ring-2 ring-blue-200"
               />
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-white">
+                  <span className="text-sm font-bold text-slate-950">
                     {selectedDiscussion.authorName}
                   </span>
                   <span
                     className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
                       selectedDiscussion.authorRole === 'Creator'
-                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
                         : selectedDiscussion.authorRole === 'Admin'
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        ? 'bg-orange-50 text-orange-700 border border-orange-200'
                         : selectedDiscussion.authorRole === 'VIP'
-                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                        : 'bg-white/10 text-zinc-300'
+                        ? 'bg-pink-50 text-pink-700 border border-pink-200'
+                        : 'bg-slate-100 text-slate-600 border border-slate-200'
                     }`}
                   >
                     {selectedDiscussion.authorRole}
                   </span>
                 </div>
-                <span className="text-[11px] text-zinc-400">
+                <span className="text-[11px] text-slate-500">
                   Posted {new Date(selectedDiscussion.createdAt).toLocaleDateString()} in{' '}
-                  <span className="text-purple-400 font-semibold">{selectedDiscussion.category}</span>
+                  <span className="text-blue-600 font-semibold">{selectedDiscussion.category}</span>
                 </span>
               </div>
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
               {selectedDiscussion.pinned && (
-                <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-orange-50 text-orange-700 border border-orange-200">
                   <Pin className="w-3.5 h-3.5" /> Pinned
                 </span>
               )}
               {selectedDiscussion.locked && (
-                <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
                   <Lock className="w-3.5 h-3.5" /> Locked
                 </span>
               )}
@@ -262,7 +261,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
                         pinned: !selectedDiscussion.pinned,
                       })
                     }
-                    className="p-2 rounded-lg bg-white/5 hover:bg-amber-500/20 text-zinc-300 hover:text-amber-300 transition"
+                    className="p-2 rounded-lg bg-slate-100 hover:bg-orange-50 text-slate-600 hover:text-orange-600 transition"
                     title={selectedDiscussion.pinned ? 'Unpin thread' : 'Pin thread'}
                   >
                     <Pin className="w-3.5 h-3.5" />
@@ -273,7 +272,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
                         locked: !selectedDiscussion.locked,
                       })
                     }
-                    className="p-2 rounded-lg bg-white/5 hover:bg-rose-500/20 text-zinc-300 hover:text-rose-300 transition"
+                    className="p-2 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 transition"
                     title={selectedDiscussion.locked ? 'Unlock thread' : 'Lock thread'}
                   >
                     {selectedDiscussion.locked ? (
@@ -292,7 +291,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
                     setEditContent(selectedDiscussion.content);
                     setIsEditingThread(!isEditingThread);
                   }}
-                  className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white transition"
+                  className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition"
                   title="Edit thread"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
@@ -301,17 +300,17 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
 
               {canModifyThread && (
                 confirmDeleteThread ? (
-                  <div className="flex items-center gap-1.5 bg-rose-500/15 border border-rose-500/30 rounded-lg px-2 py-1">
-                    <span className="text-[11px] text-rose-300 font-semibold">Delete?</span>
+                  <div className="flex items-center gap-1.5 bg-rose-50 border border-rose-200 rounded-lg px-2 py-1">
+                    <span className="text-[11px] text-rose-700 font-semibold">Delete?</span>
                     <button
                       onClick={handleDeleteThread}
-                      className="text-[11px] font-bold text-rose-400 hover:text-white px-1.5"
+                      className="text-[11px] font-bold text-rose-600 hover:text-rose-800 px-1.5"
                     >
                       Yes
                     </button>
                     <button
                       onClick={() => setConfirmDeleteThread(false)}
-                      className="text-[11px] text-zinc-400 hover:text-white px-1"
+                      className="text-[11px] text-slate-500 hover:text-slate-900 px-1"
                     >
                       No
                     </button>
@@ -319,7 +318,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
                 ) : (
                   <button
                     onClick={() => setConfirmDeleteThread(true)}
-                    className="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition"
+                    className="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition"
                     title="Delete thread"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -337,7 +336,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
                 onChange={(e) => setEditTitle(e.target.value)}
                 maxLength={150}
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm font-bold focus:outline-none focus:border-purple-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-950 text-sm font-bold focus:outline-none focus:border-blue-500"
               />
               <textarea
                 value={editContent}
@@ -345,19 +344,19 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
                 rows={4}
                 maxLength={6000}
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-purple-500 resize-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs focus:outline-none focus:border-blue-500 resize-none"
               />
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsEditingThread(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-900"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold"
                 >
                   <Save className="w-3.5 h-3.5" />
                   Save Changes
@@ -366,10 +365,10 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
             </form>
           ) : (
             <div className="space-y-4">
-              <h1 className="text-xl sm:text-2xl font-extrabold text-white leading-snug">
+              <h1 className="font-display text-xl sm:text-2xl font-extrabold text-slate-950 leading-snug">
                 {selectedDiscussion.title}
               </h1>
-              <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-line">
+              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
                 {selectedDiscussion.content}
               </p>
             </div>
@@ -380,7 +379,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
               {selectedDiscussion.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="px-2.5 py-1 rounded-lg text-xs bg-white/[0.04] text-zinc-400 border border-white/5"
+                  className="px-2.5 py-1 rounded-lg text-xs bg-slate-100 text-slate-600 border border-slate-200"
                 >
                   #{tag}
                 </span>
@@ -388,23 +387,23 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
             </div>
           )}
 
-          <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+          <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
                 onClick={(e) => handleLikeDiscussion(selectedDiscussion.id, e)}
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-bold transition active:scale-95 ${
                   isLiked
-                    ? 'bg-purple-600/30 border-purple-500/50 text-purple-200'
-                    : 'bg-purple-600/10 hover:bg-purple-600/20 border-purple-500/30 text-purple-300'
+                    ? 'bg-pink-50 border-pink-300 text-pink-600'
+                    : 'bg-slate-50 hover:bg-pink-50 border-slate-200 text-slate-700 hover:text-pink-600'
                 }`}
               >
-                <Heart className={`w-4 h-4 ${isLiked ? 'fill-current text-purple-400' : ''}`} />
+                <Heart className={`w-4 h-4 ${isLiked ? 'fill-current text-pink-500' : ''}`} />
                 <span>{selectedDiscussion.likesCount || 0}</span>
               </button>
 
               <button
                 onClick={handleShareDiscussion}
-                className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white transition"
+                className="p-2 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-200 text-slate-500 hover:text-blue-600 transition"
                 title="Share link"
               >
                 <Share2 className="w-4 h-4" />
@@ -414,15 +413,15 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
                 onClick={() =>
                   onOpenReport(selectedDiscussion.id, selectedDiscussion.title, 'discussion')
                 }
-                className="p-2 rounded-xl bg-white/[0.04] hover:bg-rose-500/10 text-zinc-400 hover:text-rose-400 transition"
+                className="p-2 rounded-xl bg-slate-50 hover:bg-rose-50 border border-slate-200 text-slate-500 hover:text-rose-600 transition"
                 title="Report topic"
               >
                 <Flag className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-zinc-400">
-              <MessageCircle className="w-4 h-4 text-zinc-400" />
+            <div className="flex items-center gap-2 text-xs text-slate-500">
+              <MessageCircle className="w-4 h-4 text-blue-600" />
               <span>{comments.length} replies</span>
             </div>
           </div>
@@ -430,8 +429,8 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
 
         {/* Reply Box */}
         {!selectedDiscussion.locked ? (
-          <div className="rounded-3xl glass-panel border border-white/10 p-6 space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">
+          <div className="rounded-3xl glass-panel p-6 space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Leave a Reply
             </h3>
             {profile ? (
@@ -442,17 +441,17 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
                   placeholder="Share your thoughts, suggestions, or help answer this question..."
                   rows={3}
                   maxLength={2000}
-                  className="w-full px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/10 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-purple-500 resize-none"
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 text-xs placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 resize-none"
                   required
                 />
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-zinc-500">
-                    Replying as <strong className="text-purple-300">{profile.displayName}</strong>
+                  <span className="text-[11px] text-slate-500">
+                    Replying as <strong className="text-blue-600">{profile.displayName}</strong>
                   </span>
                   <button
                     type="submit"
                     disabled={submittingComment || !newCommentText.trim()}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold transition disabled:opacity-50"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 text-white text-xs font-bold shadow-sm transition disabled:opacity-50"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>{submittingComment ? 'Sending...' : 'Post Reply'}</span>
@@ -460,13 +459,13 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
                 </div>
               </form>
             ) : (
-              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-between gap-3">
-                <span className="text-xs text-zinc-400">
-                  Sign in with Google to join the conversation.
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
+                <span className="text-xs text-slate-600">
+                  Sign in to join the conversation.
                 </span>
                 <button
                   onClick={openAuth}
-                  className="px-4 py-2 rounded-xl bg-purple-600 text-white text-xs font-bold hover:bg-purple-500 transition shrink-0"
+                  className="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition shrink-0"
                 >
                   Sign In
                 </button>
@@ -474,7 +473,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
             )}
           </div>
         ) : (
-          <div className="p-4 rounded-2xl bg-rose-950/20 border border-rose-500/20 text-xs text-rose-300 flex items-center gap-2">
+          <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
             <Lock className="w-4 h-4" />
             <span>This thread is locked. No further replies can be posted.</span>
           </div>
@@ -482,15 +481,15 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
 
         {/* Comments Stream */}
         <div className="space-y-4">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+          <h3 className="text-sm font-bold text-slate-950 flex items-center gap-2">
             <span>Community Replies</span>
-            <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-white/10 text-zinc-300">
+            <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-slate-200 text-slate-700">
               {comments.length}
             </span>
           </h3>
 
           {comments.length === 0 ? (
-            <div className="p-8 text-center rounded-2xl glass-panel border border-white/5 text-xs text-zinc-500">
+            <div className="p-8 text-center rounded-2xl glass-panel text-xs text-slate-500">
               No replies yet. Be the first to reply!
             </div>
           ) : (
@@ -501,7 +500,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
                 return (
                   <div
                     key={comment.id}
-                    className="p-4 sm:p-5 rounded-2xl glass-panel border border-white/5 space-y-2.5"
+                    className="p-4 sm:p-5 rounded-2xl glass-panel space-y-2.5"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
@@ -513,14 +512,14 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
                         />
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold text-white">
+                            <span className="text-xs font-bold text-slate-950">
                               {comment.authorName}
                             </span>
-                            <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300">
+                            <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200">
                               {comment.authorRole}
                             </span>
                           </div>
-                          <span className="text-[10px] text-zinc-500">
+                          <span className="text-[10px] text-slate-400">
                             {new Date(comment.createdAt).toLocaleDateString()}
                           </span>
                         </div>
@@ -529,16 +528,16 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
                       <div className="flex items-center gap-1.5">
                         {canDeleteComment && (
                           confirmDeleteCommentId === comment.id ? (
-                            <div className="flex items-center gap-1 bg-rose-500/15 border border-rose-500/30 rounded-lg px-2 py-0.5">
+                            <div className="flex items-center gap-1 bg-rose-50 border border-rose-200 rounded-lg px-2 py-0.5">
                               <button
                                 onClick={() => handleDeleteComment(comment.id)}
-                                className="text-[10px] font-bold text-rose-300 hover:text-white"
+                                className="text-[10px] font-bold text-rose-600 hover:text-rose-800"
                               >
                                 Delete
                               </button>
                               <button
                                 onClick={() => setConfirmDeleteCommentId(null)}
-                                className="text-[10px] text-zinc-400 hover:text-white ml-1"
+                                className="text-[10px] text-slate-500 hover:text-slate-900 ml-1"
                               >
                                 Cancel
                               </button>
@@ -546,7 +545,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
                           ) : (
                             <button
                               onClick={() => setConfirmDeleteCommentId(comment.id)}
-                              className="p-1 text-zinc-500 hover:text-rose-400"
+                              className="p-1 text-slate-400 hover:text-rose-600"
                               title="Delete reply"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -557,7 +556,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
                           onClick={() =>
                             onOpenReport(comment.id, comment.content.slice(0, 30), 'comment')
                           }
-                          className="p-1 text-zinc-500 hover:text-rose-400"
+                          className="p-1 text-slate-400 hover:text-pink-600"
                           title="Report reply"
                         >
                           <Flag className="w-3.5 h-3.5" />
@@ -565,7 +564,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
                       </div>
                     </div>
 
-                    <p className="text-xs text-zinc-300 leading-relaxed pl-9 whitespace-pre-line">
+                    <p className="text-xs text-slate-700 leading-relaxed pl-9 whitespace-pre-line">
                       {comment.content}
                     </p>
                   </div>
@@ -580,26 +579,26 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
 
   // Discussions List View
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 animate-fade-up">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-cyan-300">
-            <Users className="w-4 h-4 text-cyan-400" />
-            <span>Community Collaboration & Support · Obsidiuss</span>
+          <div className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-blue-600">
+            <Users className="w-4 h-4 text-blue-600" />
+            <span>Community Collaboration &amp; Support · Obsidiuss</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-            Discussions & Architecture Forum
+          <h1 className="font-display text-3xl sm:text-5xl font-black text-slate-950 tracking-tight">
+            Discussions &amp; Architecture Forum
           </h1>
-          <p className="text-sm sm:text-base text-zinc-400 max-w-2xl leading-relaxed">
+          <p className="text-sm sm:text-base text-slate-600 max-w-2xl leading-relaxed">
             Exchange client setup tips, report bugs, discuss mod architecture, suggest new features,
-            and collaborate directly with Obsidiuss and the community.
+            and collaborate directly with Bhaskar Yadav (Obsidiuss) and the community.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0">
           <button
             onClick={onOpenRules}
-            className="flex items-center gap-1.5 px-4 py-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-300 hover:text-white font-semibold text-xs transition"
+            className="flex items-center gap-1.5 px-4 py-3 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-950 font-semibold text-xs shadow-sm transition"
           >
             <span>Community Rules</span>
           </button>
@@ -609,7 +608,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
               if (!profile) openAuth();
               else setIsCreateModalOpen(true);
             }}
-            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white font-bold text-xs shadow-lg shadow-purple-900/30 transition shrink-0 active:scale-95"
+            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-600 via-sky-500 to-blue-600 hover:from-blue-700 hover:to-sky-600 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition shrink-0 active:scale-95"
           >
             <Plus className="w-4 h-4" />
             <span>New Discussion</span>
@@ -627,8 +626,8 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
                 onClick={() => setActiveCategory(cat)}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
                   active
-                    ? 'bg-purple-600 text-white shadow-md shadow-purple-900/30'
-                    : 'bg-white/[0.03] text-zinc-400 hover:text-white border border-white/5'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'bg-white text-slate-600 hover:text-slate-950 border border-slate-200'
                 }`}
               >
                 {cat}
@@ -641,7 +640,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
           href="https://discord.com/invite/aAgf7bnCNd"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-[#5865F2]/20 hover:bg-[#5865F2]/30 text-[#8e98ff] border border-[#5865F2]/40 text-xs font-bold transition shrink-0"
+          className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold transition shrink-0"
         >
           <MessageSquare className="w-3.5 h-3.5" />
           <span>Join Discord Chat</span>
@@ -655,15 +654,15 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-24 rounded-2xl glass-panel border border-white/5 animate-pulse bg-white/[0.02]"
+              className="h-24 rounded-2xl bg-white border border-slate-200 animate-pulse"
             />
           ))}
         </div>
       ) : filteredDiscussions.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl glass-panel border border-white/10 space-y-3">
-          <MessageSquare className="w-8 h-8 text-zinc-600 mx-auto" />
-          <p className="text-sm font-bold text-white">No discussions yet</p>
-          <p className="text-xs text-zinc-400">
+        <div className="p-12 text-center rounded-3xl glass-panel space-y-3">
+          <MessageSquare className="w-8 h-8 text-slate-400 mx-auto" />
+          <p className="text-sm font-bold text-slate-950">No discussions yet</p>
+          <p className="text-xs text-slate-500">
             Be the first to start a discussion topic in this category.
           </p>
           <button
@@ -671,7 +670,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
               if (!profile) openAuth();
               else setIsCreateModalOpen(true);
             }}
-            className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition"
+            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition"
           >
             Start First Thread
           </button>
@@ -684,62 +683,62 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
               <div
                 key={disc.id}
                 onClick={() => selectDiscussion(disc.id)}
-                className="p-5 rounded-2xl glass-panel glass-panel-hover cursor-pointer border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition"
+                className="p-5 rounded-2xl glass-panel glass-panel-hover cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition"
               >
                 <div className="flex items-start gap-4">
                   <UserAvatar
                     src={disc.authorAvatar}
                     name={disc.authorName}
                     sizeClass="w-10 h-10 text-xs"
-                    className="rounded-xl ring-1 ring-purple-500/30"
+                    className="rounded-xl ring-1 ring-blue-200"
                   />
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       {disc.pinned && (
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300">
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-orange-50 text-orange-700 border border-orange-200">
                           <Pin className="w-3 h-3" /> Pinned
                         </span>
                       )}
                       {disc.locked && (
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300">
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
                           <Lock className="w-3 h-3" /> Locked
                         </span>
                       )}
-                      <span className="uppercase text-[10px] font-bold text-purple-400 px-1.5 py-0.5 rounded bg-purple-500/10">
+                      <span className="uppercase text-[10px] font-bold text-blue-700 px-1.5 py-0.5 rounded bg-blue-50">
                         {disc.category}
                       </span>
-                      <span className="text-xs text-zinc-400">
-                        By <strong className="text-zinc-200">{disc.authorName}</strong>
+                      <span className="text-xs text-slate-500">
+                        By <strong className="text-slate-900">{disc.authorName}</strong>
                       </span>
-                      <span className="text-[10px] text-zinc-500">
-                        • {new Date(disc.createdAt).toLocaleDateString()}
+                      <span className="text-[10px] text-slate-400">
+                        · {new Date(disc.createdAt).toLocaleDateString()}
                       </span>
                     </div>
 
-                    <h3 className="text-sm sm:text-base font-bold text-white hover:text-purple-300 transition">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-950 hover:text-blue-600 transition">
                       {disc.title}
                     </h3>
-                    <p className="text-xs text-zinc-400 line-clamp-1 max-w-2xl">
+                    <p className="text-xs text-slate-600 line-clamp-1 max-w-2xl">
                       {disc.content}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0 pt-2 sm:pt-0 border-t sm:border-0 border-white/5">
+                <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0 pt-2 sm:pt-0 border-t sm:border-0 border-slate-100">
                   <button
                     onClick={(e) => handleLikeDiscussion(disc.id, e)}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
                       isLiked
-                        ? 'bg-purple-600/30 text-purple-200 border border-purple-500/40'
-                        : 'bg-white/[0.04] hover:bg-purple-600/20 text-purple-300'
+                        ? 'bg-pink-50 text-pink-600 border border-pink-200'
+                        : 'bg-slate-100 hover:bg-pink-50 text-slate-600 hover:text-pink-600'
                     }`}
                   >
-                    <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-current text-purple-400' : ''}`} />
+                    <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-current text-pink-500' : ''}`} />
                     <span className="font-mono">{disc.likesCount || 0}</span>
                   </button>
 
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] text-zinc-400 text-xs font-semibold">
-                    <MessageCircle className="w-3.5 h-3.5 text-zinc-400" />
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-semibold">
+                    <MessageCircle className="w-3.5 h-3.5 text-blue-600" />
                     <span className="font-mono">{disc.repliesCount || 0}</span>
                   </div>
                 </div>
@@ -756,8 +755,8 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
       />
 
       {/* Related Internal Resources */}
-      <div className="p-5 rounded-3xl glass-panel border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <p className="text-xs text-zinc-400">
+      <div className="p-5 rounded-3xl glass-panel flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <p className="text-xs text-slate-600">
           Need downloads, latest patch notes, or private feedback channels?
         </p>
         <div className="flex flex-wrap items-center gap-2 shrink-0">
@@ -767,7 +766,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
               e.preventDefault();
               onNavigate?.('resources');
             }}
-            className="px-3.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-semibold text-zinc-200 transition"
+            className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-semibold text-slate-800 transition"
           >
             Browse Resources
           </a>
@@ -777,7 +776,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
               e.preventDefault();
               onNavigate?.('announcements');
             }}
-            className="px-3.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-semibold text-zinc-200 transition"
+            className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-semibold text-slate-800 transition"
           >
             Platform Updates
           </a>
@@ -787,7 +786,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
               e.preventDefault();
               onNavigate?.('contact');
             }}
-            className="px-3.5 py-2 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-xs font-bold text-purple-200 transition"
+            className="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-xs font-bold text-blue-700 transition"
           >
             Contact Form
           </a>

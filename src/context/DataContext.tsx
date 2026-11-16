@@ -10,6 +10,8 @@ import {
   increment,
   query,
   orderBy,
+  where,
+  limit,
   onSnapshot,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -23,6 +25,13 @@ import {
   Comment,
   CategoryItem,
   UserProfile,
+  PublicProfile,
+  ChatChannelId,
+  ChatMessage,
+  DMThread,
+  DMMessage,
+  Reel,
+  ReelComment,
   FeedbackMessage,
   ModerationReport,
 } from '../types';
@@ -34,6 +43,9 @@ interface DataContextType {
   announcements: Announcement[];
   discussions: Discussion[];
   categories: CategoryItem[];
+  reels: Reel[];
+  publicProfiles: PublicProfile[];
+  dmThreads: DMThread[];
   siteVisits: number;
   loading: boolean;
 
@@ -45,6 +57,7 @@ interface DataContextType {
   // Per-user interaction state
   likedDiscussionIds: Set<string>;
   starredProjectIds: Set<string>;
+  likedReelIds: Set<string>;
 
   // Resource operations
   addResource: (data: Omit<Resource, 'id' | 'createdAt' | 'downloadsCount' | 'rating' | 'ratingCount'>) => Promise<void>;
@@ -82,11 +95,31 @@ interface DataContextType {
   addComment: (discussionId: string, content: string) => Promise<void>;
   deleteComment: (discussionId: string, commentId: string) => Promise<void>;
 
+  // Live Chat Channels
+  subscribeChannelMessages: (channelId: ChatChannelId, callback: (messages: ChatMessage[]) => void) => () => void;
+  sendChannelMessage: (channelId: ChatChannelId, content: string, replyTo?: { id: string; preview: string }) => Promise<void>;
+  deleteChannelMessage: (channelId: ChatChannelId, messageId: string) => Promise<void>;
+
+  // Direct Messages (DMs)
+  startOrGetDMThread: (target: { uid: string; displayName: string; photoURL?: string }) => Promise<string>;
+  subscribeDMMessages: (threadId: string, callback: (messages: DMMessage[]) => void) => () => void;
+  sendDMMessage: (threadId: string, content: string) => Promise<void>;
+  deleteDMMessage: (threadId: string, messageId: string) => Promise<void>;
+
+  // Reels
+  createReel: (data: { title: string; caption?: string; category: Reel['category']; videoUrl: string; thumbnailUrl?: string }) => Promise<string>;
+  deleteReel: (reelId: string) => Promise<void>;
+  toggleReelLike: (reelId: string) => Promise<boolean>;
+  incrementReelView: (reelId: string) => Promise<void>;
+  subscribeReelComments: (reelId: string, callback: (comments: ReelComment[]) => void) => () => void;
+  addReelComment: (reelId: string, content: string) => Promise<void>;
+  deleteReelComment: (reelId: string, commentId: string) => Promise<void>;
+
   // Feedback & Moderation Reports
   submitFeedback: (data: { name: string; email: string; subject: string; message: string }) => Promise<void>;
   updateFeedbackStatus: (id: string, status: FeedbackMessage['status']) => Promise<void>;
   deleteFeedback: (id: string) => Promise<void>;
-  submitReport: (data: { targetType: 'resource' | 'discussion' | 'comment' | 'review'; targetId: string; reason: string; details?: string }) => Promise<void>;
+  submitReport: (data: { targetType: ModerationReport['targetType']; targetId: string; reason: string; details?: string }) => Promise<void>;
   updateReportStatus: (id: string, status: ModerationReport['status']) => Promise<void>;
   deleteReport: (id: string) => Promise<void>;
 
@@ -102,6 +135,11 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 const generateId = (prefix: string) =>
   `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 8)}`;
 
+export const buildDMThreadId = (uidA: string, uidB: string) => {
+  const [first, second] = [uidA, uidB].sort();
+  return `${first}_${second}`;
+};
+
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user, profile, isAdmin } = useAuth();
 
@@ -110,6 +148,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [reels, setReels] = useState<Reel[]>([]);
+  const [publicProfiles, setPublicProfiles] = useState<PublicProfile[]>([]);
+  const [dmThreads, setDmThreads] = useState<DMThread[]>([]);
   const [siteVisits, setSiteVisits] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -119,6 +160,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const [likedDiscussionIds, setLikedDiscussionIds] = useState<Set<string>>(new Set());
   const [starredProjectIds, setStarredProjectIds] = useState<Set<string>>(new Set());
+  const [likedReelIds, setLikedReelIds] = useState<Set<string>>(new Set());
 
   // Record 1 real site visit per browser session
   useEffect(() => {
@@ -237,6 +279,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     );
 
+    const unsubReels = onSnapshot(
+      query(collection(db, 'reels'), orderBy('createdAt', 'desc')),
+      (snapshot) => {
+        const list: Reel[] = snapshot.docs.map((docSnap) => ({
+          ...(docSnap.data() as Reel),
+          id: docSnap.id,
+        }));
+        setReels(list);
+      },
+      (err) => {
+        handleFirestoreError(err, OperationType.LIST, 'reels');
+      }
+    );
+
     const unsubAnalytics = onSnapshot(
       doc(db, 'analytics', 'site'),
       (snap) => {
@@ -258,9 +314,61 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       unsubAnnouncements();
       unsubDiscussions();
       unsubCategories();
+      unsubReels();
       unsubAnalytics();
     };
   }, []);
+
+  // Authenticated-only listeners: Public member directory (non-PII) & user's private DM threads
+  useEffect(() => {
+    if (!user) {
+      setPublicProfiles([]);
+      setDmThreads([]);
+      return;
+    }
+
+    const unsubPublicProfiles = onSnapshot(
+      collection(db, 'publicProfiles'),
+      (snapshot) => {
+        const list: PublicProfile[] = snapshot.docs.map((d) => ({
+          ...(d.data() as PublicProfile),
+          uid: d.id,
+        }));
+        setPublicProfiles(list);
+      },
+      (err) => {
+        console.warn('Public profiles listener error:', err);
+      }
+    );
+
+    const unsubDMThreads = onSnapshot(
+      query(
+        collection(db, 'dmThreads'),
+        where('participantIds', 'array-contains', user.uid)
+      ),
+      (snapshot) => {
+        const list: DMThread[] = snapshot.docs
+          .map((d) => ({
+            ...(d.data() as DMThread),
+            id: d.id,
+          }))
+          .sort((a, b) => {
+            const ta = new Date(a.lastMessageAt || a.createdAt).getTime();
+            const tb = new Date(b.lastMessageAt || b.createdAt).getTime();
+            return tb - ta;
+          });
+        setDmThreads(list);
+      },
+      (err) => {
+        handleFirestoreError(err, OperationType.LIST, 'dmThreads');
+      }
+    );
+
+    return () => {
+      unsubPublicProfiles();
+      unsubDMThreads();
+    };
+  }, [user]);
 
   // Admin-only listeners (Users, Feedback, Moderation Reports)
   useEffect(() => {
@@ -320,11 +428,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, [isAdmin]);
 
-  // Load current user's liked discussions & starred projects
+  // Load current user's liked discussions, starred projects & liked reels
   useEffect(() => {
     if (!user) {
       setLikedDiscussionIds(new Set());
       setStarredProjectIds(new Set());
+      setLikedReelIds(new Set());
       return;
     }
 
@@ -349,6 +458,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           })
         );
         if (!cancelled) setStarredProjectIds(starredSet);
+
+        const likedReelsSet = new Set<string>();
+        await Promise.all(
+          reels.map(async (reel) => {
+            const snap = await getDoc(doc(db, 'reels', reel.id, 'likes', user.uid));
+            if (snap.exists()) likedReelsSet.add(reel.id);
+          })
+        );
+        if (!cancelled) setLikedReelIds(likedReelsSet);
       } catch {
         // Ignore non-critical hydration failure
       }
@@ -358,7 +476,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => {
       cancelled = true;
     };
-  }, [user, discussions.length, projects.length]);
+  }, [user, discussions.length, projects.length, reels.length]);
 
   // --- Resource Operations ---
   const addResource = async (
@@ -373,7 +491,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       ratingCount: 0,
       createdAt: new Date().toISOString(),
     };
-    // Remove undefined fields for Firestore cleanliness
     const cleanPayload = Object.fromEntries(
       Object.entries(newResource).filter(([, v]) => v !== undefined)
     );
@@ -462,7 +579,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await setDoc(ratingRef, payload);
 
-      // Recompute real average rating from all ratings in subcollection
       const ratingsSnap = await getDocs(collection(db, 'resources', resourceId, 'ratings'));
       const total = ratingsSnap.docs.reduce((sum, d) => sum + Number(d.data().stars || 0), 0);
       const count = ratingsSnap.size;
@@ -486,7 +602,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await deleteDoc(doc(db, 'resources', resourceId, 'ratings', ratingUserId));
 
-      // Recompute average
       const ratingsSnap = await getDocs(collection(db, 'resources', resourceId, 'ratings'));
       const total = ratingsSnap.docs.reduce((sum, d) => sum + Number(d.data().stars || 0), 0);
       const count = ratingsSnap.size;
@@ -515,7 +630,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             });
           });
         } catch {
-          // ignore single resource fetch error
+          // ignore
         }
       })
     );
@@ -850,6 +965,319 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // --- Live Chat Channels ---
+  const subscribeChannelMessages = useCallback(
+    (channelId: ChatChannelId, callback: (messages: ChatMessage[]) => void) => {
+      const q = query(
+        collection(db, 'chatChannels', channelId, 'messages'),
+        orderBy('createdAt', 'asc'),
+        limit(150)
+      );
+      return onSnapshot(
+        q,
+        (snap) => {
+          const list: ChatMessage[] = snap.docs.map((d) => ({
+            ...(d.data() as ChatMessage),
+            id: d.id,
+          }));
+          callback(list);
+        },
+        (err) => {
+          callback([]);
+          handleFirestoreError(err, OperationType.LIST, `chatChannels/${channelId}/messages`);
+        }
+      );
+    },
+    []
+  );
+
+  const sendChannelMessage = async (
+    channelId: ChatChannelId,
+    content: string,
+    replyTo?: { id: string; preview: string }
+  ) => {
+    if (!user || !profile) throw new Error('Sign in required to send messages.');
+    const trimmed = content.trim().slice(0, 1000);
+    if (!trimmed) return;
+
+    const id = generateId('msg');
+    const payload: Record<string, unknown> = {
+      id,
+      channelId,
+      senderId: user.uid,
+      senderName: profile.displayName.slice(0, 80),
+      senderAvatar: profile.photoURL || '',
+      senderRole: profile.role || 'Member',
+      content: trimmed,
+      createdAt: new Date().toISOString(),
+    };
+    if (replyTo) {
+      payload.replyToId = replyTo.id;
+      payload.replyToPreview = replyTo.preview.slice(0, 160);
+    }
+
+    try {
+      await setDoc(doc(db, 'chatChannels', channelId, 'messages', id), payload);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.CREATE, `chatChannels/${channelId}/messages/${id}`);
+    }
+  };
+
+  const deleteChannelMessage = async (channelId: string, messageId: string) => {
+    try {
+      await deleteDoc(doc(db, 'chatChannels', channelId, 'messages', messageId));
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `chatChannels/${channelId}/messages/${messageId}`);
+    }
+  };
+
+  // --- Private Direct Messages ---
+  const startOrGetDMThread = async (target: {
+    uid: string;
+    displayName: string;
+    photoURL?: string;
+  }): Promise<string> => {
+    if (!user || !profile) throw new Error('Sign in required for direct messages.');
+    if (target.uid === user.uid) throw new Error('Cannot start a direct message with yourself.');
+
+    const threadId = buildDMThreadId(user.uid, target.uid);
+    const existing = dmThreads.find((t) => t.id === threadId);
+    if (existing) return existing.id;
+
+    const threadRef = doc(db, 'dmThreads', threadId);
+    const snap = await getDoc(threadRef);
+    if (snap.exists()) return threadId;
+
+    const now = new Date().toISOString();
+    const newThread: DMThread = {
+      id: threadId,
+      participantIds: [user.uid, target.uid].sort(),
+      participantNames: {
+        [user.uid]: profile.displayName.slice(0, 80),
+        [target.uid]: target.displayName.slice(0, 80),
+      },
+      participantAvatars: {
+        [user.uid]: profile.photoURL || '',
+        [target.uid]: target.photoURL || '',
+      },
+      lastMessage: '',
+      lastSenderId: '',
+      lastMessageAt: now,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    try {
+      await setDoc(threadRef, newThread);
+      return threadId;
+    } catch (err) {
+      handleFirestoreError(err, OperationType.CREATE, `dmThreads/${threadId}`);
+    }
+  };
+
+  const subscribeDMMessages = useCallback(
+    (threadId: string, callback: (messages: DMMessage[]) => void) => {
+      const q = query(
+        collection(db, 'dmThreads', threadId, 'messages'),
+        orderBy('createdAt', 'asc'),
+        limit(200)
+      );
+      return onSnapshot(
+        q,
+        (snap) => {
+          const list: DMMessage[] = snap.docs.map((d) => ({
+            ...(d.data() as DMMessage),
+            id: d.id,
+          }));
+          callback(list);
+        },
+        (err) => {
+          callback([]);
+          handleFirestoreError(err, OperationType.LIST, `dmThreads/${threadId}/messages`);
+        }
+      );
+    },
+    []
+  );
+
+  const sendDMMessage = async (threadId: string, content: string) => {
+    if (!user || !profile) throw new Error('Sign in required to send direct messages.');
+    const trimmed = content.trim().slice(0, 2000);
+    if (!trimmed) return;
+
+    const id = generateId('dm');
+    const now = new Date().toISOString();
+    const msgPayload: DMMessage = {
+      id,
+      threadId,
+      senderId: user.uid,
+      senderName: profile.displayName.slice(0, 80),
+      content: trimmed,
+      createdAt: now,
+    };
+
+    try {
+      await setDoc(doc(db, 'dmThreads', threadId, 'messages', id), msgPayload);
+      await updateDoc(doc(db, 'dmThreads', threadId), {
+        lastMessage: trimmed.slice(0, 400),
+        lastSenderId: user.uid,
+        lastMessageAt: now,
+        updatedAt: now,
+      });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.CREATE, `dmThreads/${threadId}/messages/${id}`);
+    }
+  };
+
+  const deleteDMMessage = async (threadId: string, messageId: string) => {
+    try {
+      await deleteDoc(doc(db, 'dmThreads', threadId, 'messages', messageId));
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `dmThreads/${threadId}/messages/${messageId}`);
+    }
+  };
+
+  // --- Reels Operations ---
+  const createReel = async (data: {
+    title: string;
+    caption?: string;
+    category: Reel['category'];
+    videoUrl: string;
+    thumbnailUrl?: string;
+  }): Promise<string> => {
+    if (!user || !profile) throw new Error('Sign in required to publish a reel.');
+    const id = generateId('reel');
+    const payload: Record<string, unknown> = {
+      id,
+      title: data.title.trim().slice(0, 120),
+      caption: data.caption?.trim().slice(0, 500) || '',
+      category: data.category.trim().slice(0, 40) || 'Showcase',
+      videoUrl: data.videoUrl.trim().slice(0, 1500),
+      thumbnailUrl: data.thumbnailUrl?.trim().slice(0, 1500) || '',
+      authorId: user.uid,
+      authorName: profile.displayName.slice(0, 100),
+      authorAvatar: profile.photoURL || '',
+      authorRole: profile.role || 'Member',
+      likesCount: 0,
+      commentsCount: 0,
+      viewsCount: 0,
+      featured: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      await setDoc(doc(db, 'reels', id), payload);
+      return id;
+    } catch (err) {
+      handleFirestoreError(err, OperationType.CREATE, `reels/${id}`);
+    }
+  };
+
+  const deleteReel = async (reelId: string) => {
+    try {
+      await deleteDoc(doc(db, 'reels', reelId));
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `reels/${reelId}`);
+    }
+  };
+
+  const toggleReelLike = async (reelId: string): Promise<boolean> => {
+    if (!user) throw new Error('Sign in required to like reels.');
+    const likeRef = doc(db, 'reels', reelId, 'likes', user.uid);
+    const reelRef = doc(db, 'reels', reelId);
+
+    try {
+      const snap = await getDoc(likeRef);
+      if (snap.exists()) {
+        await deleteDoc(likeRef);
+        await updateDoc(reelRef, { likesCount: increment(-1) });
+        setLikedReelIds((prev) => {
+          const next = new Set(prev);
+          next.delete(reelId);
+          return next;
+        });
+        return false;
+      } else {
+        await setDoc(likeRef, { userId: user.uid, createdAt: new Date().toISOString() });
+        await updateDoc(reelRef, { likesCount: increment(1) });
+        setLikedReelIds((prev) => new Set(prev).add(reelId));
+        return true;
+      }
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `reels/${reelId}/likes/${user.uid}`);
+    }
+  };
+
+  const incrementReelView = async (reelId: string) => {
+    try {
+      await updateDoc(doc(db, 'reels', reelId), {
+        viewsCount: increment(1),
+      });
+    } catch {
+      // Non-critical view counter
+    }
+  };
+
+  const subscribeReelComments = useCallback(
+    (reelId: string, callback: (comments: ReelComment[]) => void) => {
+      const q = query(collection(db, 'reels', reelId, 'comments'), orderBy('createdAt', 'asc'));
+      return onSnapshot(
+        q,
+        (snap) => {
+          const list: ReelComment[] = snap.docs.map((d) => ({
+            ...(d.data() as ReelComment),
+            id: d.id,
+          }));
+          callback(list);
+        },
+        (err) => {
+          callback([]);
+          handleFirestoreError(err, OperationType.LIST, `reels/${reelId}/comments`);
+        }
+      );
+    },
+    []
+  );
+
+  const addReelComment = async (reelId: string, content: string) => {
+    if (!user || !profile) throw new Error('Sign in required to comment on reels.');
+    const trimmed = content.trim().slice(0, 500);
+    if (!trimmed) return;
+
+    const id = generateId('rcmt');
+    const payload: ReelComment = {
+      id,
+      reelId,
+      authorId: user.uid,
+      authorName: profile.displayName.slice(0, 100),
+      authorAvatar: profile.photoURL || '',
+      authorRole: profile.role || 'Member',
+      content: trimmed,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      await setDoc(doc(db, 'reels', reelId, 'comments', id), payload);
+      await updateDoc(doc(db, 'reels', reelId), {
+        commentsCount: increment(1),
+      });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.CREATE, `reels/${reelId}/comments/${id}`);
+    }
+  };
+
+  const deleteReelComment = async (reelId: string, commentId: string) => {
+    try {
+      await deleteDoc(doc(db, 'reels', reelId, 'comments', commentId));
+      const snap = await getDocs(collection(db, 'reels', reelId, 'comments'));
+      await updateDoc(doc(db, 'reels', reelId), {
+        commentsCount: snap.size,
+      });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `reels/${reelId}/comments/${commentId}`);
+    }
+  };
+
   // --- Feedback & Reports ---
   const submitFeedback = async (data: {
     name: string;
@@ -892,7 +1320,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const submitReport = async (data: {
-    targetType: 'resource' | 'discussion' | 'comment' | 'review';
+    targetType: ModerationReport['targetType'];
     targetId: string;
     reason: string;
     details?: string;
@@ -939,11 +1367,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // --- User Role Management (Admin) ---
   const updateUserRole = async (uid: string, role: UserProfile['role']) => {
+    const now = new Date().toISOString();
     try {
       await updateDoc(doc(db, 'users', uid), {
         role,
-        updatedAt: new Date().toISOString(),
+        updatedAt: now,
       });
+      try {
+        await updateDoc(doc(db, 'publicProfiles', uid), {
+          role,
+          updatedAt: now,
+        });
+      } catch {
+        // Ignore if publicProfile doc hasn't been initialized yet
+      }
     } catch (err) {
       handleFirestoreError(err, OperationType.UPDATE, `users/${uid}`);
     }
@@ -965,6 +1402,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         announcements,
         discussions,
         categories,
+        reels,
+        publicProfiles,
+        dmThreads,
         siteVisits,
         loading,
         usersList,
@@ -972,6 +1412,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         reportsList,
         likedDiscussionIds,
         starredProjectIds,
+        likedReelIds,
         addResource,
         updateResource,
         deleteResource,
@@ -998,6 +1439,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         getCommentsForDiscussion,
         addComment,
         deleteComment,
+        subscribeChannelMessages,
+        sendChannelMessage,
+        deleteChannelMessage,
+        startOrGetDMThread,
+        subscribeDMMessages,
+        sendDMMessage,
+        deleteDMMessage,
+        createReel,
+        deleteReel,
+        toggleReelLike,
+        incrementReelView,
+        subscribeReelComments,
+        addReelComment,
+        deleteReelComment,
         submitFeedback,
         updateFeedbackStatus,
         deleteFeedback,

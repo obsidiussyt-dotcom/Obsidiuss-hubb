@@ -12,6 +12,8 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfflineBanner } from './components/PWAControls';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
+import { MobileBottomNav } from './components/MobileBottomNav';
+import { BrandLogo } from './components/BrandLogo';
 import { DownloadModal } from './components/DownloadModal';
 import { GlobalSearchModal } from './components/GlobalSearchModal';
 import { AuthModal } from './components/AuthModal';
@@ -21,6 +23,9 @@ import { HomeView } from './views/HomeView';
 import { ResourcesView } from './views/ResourcesView';
 import { ProjectsView } from './views/ProjectsView';
 import { CommunityView } from './views/CommunityView';
+import { ReelsView } from './views/ReelsView';
+import { ChatView } from './views/ChatView';
+import { SignInView } from './views/SignInView';
 import { AnnouncementsView } from './views/AnnouncementsView';
 import { AboutView } from './views/AboutView';
 import { ContactView } from './views/ContactView';
@@ -34,18 +39,24 @@ export interface NavigateOptions {
   search?: string;
   resourceId?: string;
   threadId?: string;
+  reelId?: string;
+  dmThreadId?: string;
 }
 
 const VALID_TABS = new Set([
   'home',
   'resources',
   'projects',
+  'reels',
+  'chat',
+  'dms',
   'community',
   'announcements',
   'about',
   'contact',
   'dashboard',
   'admin',
+  'signin',
 ]);
 
 const TAB_META: Record<string, { title: string; description: string }> = {
@@ -63,6 +74,21 @@ const TAB_META: Record<string, { title: string; description: string }> = {
     title: 'Selected Works & Engineering Projects | OBSIDIUSS',
     description:
       'Explore standalone game clients, native Android utilities, and open-source applications engineered by Obsidiuss.',
+  },
+  reels: {
+    title: 'Reels & Dev Clips | OBSIDIUSS',
+    description:
+      'Watch short-form engineering demos, client benchmarks, mod previews, and setup walkthroughs from the Obsidiuss community.',
+  },
+  chat: {
+    title: 'Live Chat Lounge | OBSIDIUSS',
+    description:
+      'Join real-time OBSIDIUSS community chat channels across Minecraft dev, Android, and help desk.',
+  },
+  dms: {
+    title: 'Direct Messages | OBSIDIUSS',
+    description:
+      'Private 1-on-1 real-time messaging between verified OBSIDIUSS HUB members.',
   },
   community: {
     title: 'Community Discussions | OBSIDIUSS',
@@ -93,6 +119,11 @@ const TAB_META: Record<string, { title: string; description: string }> = {
     title: 'Admin Control Panel | OBSIDIUSS',
     description: 'Manage resources, projects, announcements, users, categories, and moderation.',
   },
+  signin: {
+    title: 'Sign In & Join | OBSIDIUSS HUB',
+    description:
+      'Access OBSIDIUSS HUB with Google or Email & Password to unlock Direct Messages, Live Chat, Reels, and Downloads.',
+  },
   '404': {
     title: 'Page Not Found | OBSIDIUSS HUB',
     description: 'The requested page could not be found on OBSIDIUSS HUB.',
@@ -107,6 +138,8 @@ export function buildHref(tab: string, options?: NavigateOptions): string {
   if (options.search?.trim()) params.set('q', options.search.trim());
   if (options.resourceId) params.set('resource', options.resourceId);
   if (options.threadId) params.set('thread', options.threadId);
+  if (options.reelId) params.set('reel', options.reelId);
+  if (options.dmThreadId) params.set('dm', options.dmThreadId);
   const qs = params.toString();
   return qs ? `${basePath}?${qs}` : basePath;
 }
@@ -125,12 +158,14 @@ function readUrlParams() {
     search: params.get('q') || '',
     resourceId: params.get('resource') || null,
     threadId: params.get('thread') || null,
+    reelId: params.get('reel') || null,
+    dmThreadId: params.get('dm') || null,
   };
 }
 
 function MainApp() {
-  const { resources } = useData();
-  const { isAdmin } = useAuth();
+  const { resources, startOrGetDMThread } = useData();
+  const { user, loading: authLoading, isAdmin, isVerifiedUser } = useAuth();
   const initialParams = readUrlParams();
 
   const [currentTab, setCurrentTabState] = useState<string>(() =>
@@ -146,6 +181,10 @@ function MainApp() {
   const [communityThreadId, setCommunityThreadId] = useState<string | null>(
     initialParams.threadId
   );
+  const [pendingReelId, setPendingReelId] = useState<string | null>(initialParams.reelId);
+  const [activeDmThreadId, setActiveDmThreadId] = useState<string | null>(
+    initialParams.dmThreadId
+  );
 
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -157,7 +196,7 @@ function MainApp() {
     isOpen: boolean;
     targetId: string;
     targetTitle: string;
-    targetType: 'resource' | 'discussion' | 'comment' | 'review';
+    targetType: 'resource' | 'discussion' | 'comment' | 'review' | 'reel' | 'chat';
   }>({
     isOpen: false,
     targetId: '',
@@ -176,6 +215,12 @@ function MainApp() {
       }
     } else if (tab === 'community') {
       setCommunityThreadId(options?.threadId ?? null);
+    } else if (tab === 'reels') {
+      setPendingReelId(options?.reelId ?? null);
+    } else if (tab === 'dms' || tab === 'chat') {
+      if (options?.dmThreadId !== undefined) {
+        setActiveDmThreadId(options.dmThreadId ?? null);
+      }
     }
 
     const targetUrl = buildHref(tab, options);
@@ -213,6 +258,8 @@ function MainApp() {
       setResourceCategory(params.category);
       setResourceSearch(params.search);
       setCommunityThreadId(params.threadId);
+      setPendingReelId(params.reelId);
+      setActiveDmThreadId(params.dmThreadId);
       if (params.resourceId) {
         const match = resources.find((r) => r.id === params.resourceId);
         setSelectedResource(match || null);
@@ -312,10 +359,22 @@ function MainApp() {
     [currentTab]
   );
 
+  const handleStartDMWithUser = useCallback(
+    async (target: { uid: string; displayName: string; photoURL?: string }) => {
+      try {
+        const threadId = await startOrGetDMThread(target);
+        navigateTo('dms', { dmThreadId: threadId });
+      } catch {
+        setIsAuthOpen(true);
+      }
+    },
+    [startOrGetDMThread, navigateTo]
+  );
+
   const openReport = (
     targetId: string,
     targetTitle: string,
-    targetType: 'resource' | 'discussion' | 'comment' | 'review' = 'resource'
+    targetType: 'resource' | 'discussion' | 'comment' | 'review' | 'reel' | 'chat' = 'resource'
   ) => {
     setReportState({
       isOpen: true,
@@ -329,8 +388,37 @@ function MainApp() {
     setReportState((prev) => ({ ...prev, isOpen: false }));
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-[100dvh] bg-[#06070c] text-zinc-100 flex flex-col items-center justify-center gap-4 p-6">
+        <BrandLogo size={56} className="animate-pulse" />
+        <div className="text-center space-y-1">
+          <p className="text-sm font-black tracking-widest text-white">OBSIDIUSS HUB</p>
+          <p className="text-xs text-zinc-500">By Bhaskar Yadav</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-[100dvh] bg-[#06070c] text-zinc-100 flex flex-col selection:bg-purple-500/30 selection:text-purple-200">
+        <SignInView
+          isGate
+          onNavigate={navigateTo}
+          onOpenRules={() => setIsRulesOpen(true)}
+        />
+        <OfflineBanner />
+        <CommunityRulesModal
+          isOpen={isRulesOpen}
+          onClose={() => setIsRulesOpen(false)}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#08090d] text-zinc-100 flex flex-col selection:bg-purple-500/30 selection:text-purple-200">
+    <div className="min-h-screen bg-[#06070c] text-zinc-100 flex flex-col selection:bg-purple-500/30 selection:text-purple-200">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:rounded-xl focus:bg-purple-600 focus:text-white focus:text-xs focus:font-bold"
@@ -345,6 +433,19 @@ function MainApp() {
         openAuth={() => setIsAuthOpen(true)}
         onOpenRules={() => setIsRulesOpen(true)}
       />
+
+      {!isVerifiedUser && (
+        <div className="border-b border-amber-500/20 bg-amber-500/10 px-4 py-2 text-center text-xs text-amber-200 flex flex-wrap items-center justify-center gap-2">
+          <span>Verify your email address to post in Live Chat, DMs, Reels, and Forum.</span>
+          <button
+            type="button"
+            onClick={() => setIsAuthOpen(true)}
+            className="font-bold underline text-white hover:text-amber-200"
+          >
+            Verify now
+          </button>
+        </div>
+      )}
 
       <main id="main-content" className="flex-1">
         {currentTab === 'home' && (
@@ -380,6 +481,30 @@ function MainApp() {
             setCurrentTab={setCurrentTab}
             onNavigate={navigateTo}
             openAuth={() => setIsAuthOpen(true)}
+          />
+        )}
+
+        {currentTab === 'reels' && (
+          <ReelsView
+            openAuth={() => setIsAuthOpen(true)}
+            initialReelId={pendingReelId}
+            onStartDMWithUser={handleStartDMWithUser}
+            onOpenReport={openReport}
+          />
+        )}
+
+        {(currentTab === 'chat' || currentTab === 'dms') && (
+          <ChatView
+            initialMode={currentTab === 'dms' ? 'dms' : 'chat'}
+            initialDmThreadId={activeDmThreadId}
+            openAuth={() => setIsAuthOpen(true)}
+            onOpenReport={openReport}
+            onModeChange={(nextMode) => {
+              const targetTab = nextMode === 'dms' ? 'dms' : 'chat';
+              if (currentTab !== targetTab) {
+                navigateTo(targetTab);
+              }
+            }}
           />
         )}
 
@@ -420,6 +545,13 @@ function MainApp() {
           />
         )}
 
+        {currentTab === 'signin' && (
+          <SignInView
+            onNavigate={navigateTo}
+            onOpenRules={() => setIsRulesOpen(true)}
+          />
+        )}
+
         {currentTab === '404' && (
           <NotFoundView
             onNavigate={navigateTo}
@@ -435,10 +567,12 @@ function MainApp() {
         onOpenRules={() => setIsRulesOpen(true)}
       />
 
+      <MobileBottomNav currentTab={currentTab} setCurrentTab={setCurrentTab} />
+
       {showScrollTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-6 right-6 z-40 p-3 rounded-2xl bg-[#12131f]/90 hover:bg-purple-600 text-zinc-200 hover:text-white border border-white/10 shadow-xl backdrop-blur-md transition active:scale-95"
+          className="fixed bottom-20 lg:bottom-6 right-4 sm:right-6 z-40 p-3 rounded-2xl bg-[#12131f]/90 hover:bg-purple-600 text-zinc-200 hover:text-white border border-white/10 shadow-xl backdrop-blur-md transition active:scale-95"
           aria-label="Scroll to top"
           title="Back to top"
         >
@@ -467,6 +601,7 @@ function MainApp() {
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
         onOpenRules={() => setIsRulesOpen(true)}
+        onOpenFullPage={() => navigateTo('signin')}
       />
 
       <CommunityRulesModal

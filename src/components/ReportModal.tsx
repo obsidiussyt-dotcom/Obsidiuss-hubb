@@ -9,16 +9,20 @@ interface ReportModalProps {
   onClose: () => void;
   targetId: string;
   targetTitle: string;
-  targetType?: 'resource' | 'discussion' | 'comment' | 'review';
+  targetType?: 'resource' | 'discussion' | 'comment' | 'review' | 'reel' | 'chat';
   openAuth?: () => void;
 }
 
-const getDefaultReason = (targetType: 'resource' | 'discussion' | 'comment' | 'review') => {
+const getDefaultReason = (
+  targetType: 'resource' | 'discussion' | 'comment' | 'review' | 'reel' | 'chat'
+) => {
   switch (targetType) {
     case 'review':
     case 'comment':
+    case 'chat':
       return 'Inappropriate language or harassment';
     case 'discussion':
+    case 'reel':
       return 'Spam or unauthorized advertising';
     case 'resource':
     default:
@@ -53,7 +57,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) {
-      showToast('Please sign in with Google to submit a moderation report.', 'info');
+      showToast('Please sign in to submit a moderation report.', 'info');
       onClose();
       openAuth?.();
       return;
@@ -84,6 +88,10 @@ export const ReportModal: React.FC<ReportModalProps> = ({
       ? 'Comment'
       : targetType === 'discussion'
       ? 'Discussion'
+      : targetType === 'reel'
+      ? 'Reel'
+      : targetType === 'chat'
+      ? 'Chat Message'
       : 'Resource';
 
   return (

@@ -22,6 +22,7 @@ import {
   CheckCircle2,
   XCircle,
   RefreshCw,
+  Film,
 } from 'lucide-react';
 import { useAuth, ADMIN_EMAIL } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -90,6 +91,8 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     updateUserRole,
     getAllResourceRatings,
     deleteResourceRating,
+    reels,
+    deleteReel,
     uploadFile,
   } = useData();
   const { showToast } = useToast();
@@ -1604,6 +1607,23 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                           Remove Review
                         </button>
                       )}
+                      {rep.targetType === 'reel' && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await deleteReel(rep.targetId);
+                              await updateReportStatus(rep.id, 'resolved');
+                              showToast('Flagged reel deleted and report resolved.', 'success');
+                            } catch {
+                              showToast('Could not remove reel (it may already be deleted).', 'info');
+                            }
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-[11px] font-bold transition"
+                        >
+                          Remove Reel
+                        </button>
+                      )}
                       <button
                         onClick={() => updateReportStatus(rep.id, 'resolved')}
                         className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
@@ -1730,6 +1750,44 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                   )}
                 </div>
               ))
+            )}
+          </div>
+
+          {/* Reels Moderation */}
+          <div className="space-y-3">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <Film className="w-4 h-4 text-purple-400" />
+              <span>Published Reels ({reels.length})</span>
+            </h2>
+            {reels.length === 0 ? (
+              <div className="p-8 text-center rounded-2xl glass-panel border border-white/5 text-xs text-zinc-400">
+                No community reels published yet.
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {reels.map((reel) => (
+                  <div
+                    key={reel.id}
+                    className="p-4 rounded-2xl glass-panel border border-white/5 flex items-center justify-between gap-4"
+                  >
+                    <div className="min-w-0 space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold uppercase text-purple-300 bg-purple-500/15 px-2 py-0.5 rounded">
+                          {reel.category}
+                        </span>
+                        <span className="text-xs font-bold text-white truncate">{reel.title}</span>
+                      </div>
+                      <p className="text-[11px] text-zinc-400">
+                        Creator: {reel.authorName} • {reel.likesCount || 0} likes • {reel.commentsCount || 0} comments • {reel.viewsCount || 0} views
+                      </p>
+                    </div>
+                    {renderDeleteButton(`reel-${reel.id}`, async () => {
+                      await deleteReel(reel.id);
+                      showToast('Reel removed.', 'info');
+                    })}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>

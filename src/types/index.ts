@@ -137,6 +137,83 @@ export interface UserProfile {
   downloadActivity?: DownloadActivityItem[];
 }
 
+export interface PublicProfile {
+  uid: string;
+  displayName: string;
+  photoURL?: string;
+  role: 'Creator' | 'Admin' | 'VIP' | 'Moderator' | 'Member';
+  bio?: string;
+  discordHandle?: string;
+  youtubeHandle?: string;
+  updatedAt?: string;
+}
+
+export type ChatChannelId = 'general' | 'minecraft-dev' | 'android-hub' | 'help-desk';
+
+export interface ChatMessage {
+  id: string;
+  channelId: ChatChannelId;
+  senderId: string;
+  senderName: string;
+  senderAvatar?: string;
+  senderRole: 'Creator' | 'Admin' | 'VIP' | 'Moderator' | 'Member';
+  content: string;
+  replyToId?: string;
+  replyToPreview?: string;
+  createdAt: string;
+}
+
+export interface DMThread {
+  id: string;
+  participantIds: string[];
+  participantNames: Record<string, string>;
+  participantAvatars: Record<string, string>;
+  lastMessage?: string;
+  lastSenderId?: string;
+  lastMessageAt?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface DMMessage {
+  id: string;
+  threadId: string;
+  senderId: string;
+  senderName: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface Reel {
+  id: string;
+  title: string;
+  caption?: string;
+  category: 'Showcase' | 'Minecraft' | 'Android' | 'Devlog' | 'Tutorial' | string;
+  videoUrl: string;
+  thumbnailUrl?: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar?: string;
+  authorRole: 'Creator' | 'Admin' | 'VIP' | 'Moderator' | 'Member';
+  likesCount: number;
+  commentsCount: number;
+  viewsCount: number;
+  featured?: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ReelComment {
+  id: string;
+  reelId: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar?: string;
+  authorRole: 'Creator' | 'Admin' | 'VIP' | 'Moderator' | 'Member';
+  content: string;
+  createdAt: string;
+}
+
 export interface FeedbackMessage {
   id?: string;
   name: string;
@@ -150,7 +227,7 @@ export interface FeedbackMessage {
 
 export interface ModerationReport {
   id: string;
-  targetType: 'resource' | 'discussion' | 'comment' | 'review';
+  targetType: 'resource' | 'discussion' | 'comment' | 'review' | 'reel' | 'chat';
   targetId: string;
   reason: string;
   details?: string;

@@ -100,7 +100,7 @@
         "category": { "type": "string", "maxLength": 50 },
         "authorId": { "type": "string", "maxLength": 128 },
         "authorName": { "type": "string", "maxLength": 100 },
-        "authorAvatar": { "type": "string", "maxLength": 500 },
+        "authorAvatar": { "type": "string", "maxLength": 200000 },
         "authorRole": { "type": "string", "maxLength": 40 },
         "likesCount": { "type": "number" },
         "repliesCount": { "type": "number" },
@@ -129,7 +129,7 @@
         "discussionId": { "type": "string", "maxLength": 128 },
         "authorId": { "type": "string", "maxLength": 128 },
         "authorName": { "type": "string", "maxLength": 100 },
-        "authorAvatar": { "type": "string", "maxLength": 500 },
+        "authorAvatar": { "type": "string", "maxLength": 200000 },
         "authorRole": { "type": "string", "maxLength": 40 },
         "content": { "type": "string", "maxLength": 2000 },
         "likesCount": { "type": "number" },
@@ -152,7 +152,7 @@
     },
     "UserProfile": {
       "title": "UserProfile",
-      "description": "Profile details of a community member.",
+      "description": "Private profile details of a community member (includes PII email, owner/admin only).",
       "type": "object",
       "properties": {
         "displayName": { "type": "string", "maxLength": 80 },
@@ -168,6 +168,116 @@
         "updatedAt": { "type": "string", "maxLength": 50 }
       },
       "required": ["displayName", "role"]
+    },
+    "PublicProfile": {
+      "title": "PublicProfile",
+      "description": "Non-PII public member card for DMs, chat, and reels attribution (strictly no email).",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 80 },
+        "photoURL": { "type": "string", "maxLength": 200000 },
+        "role": { "type": "string", "maxLength": 40 },
+        "bio": { "type": "string", "maxLength": 600 },
+        "discordHandle": { "type": "string", "maxLength": 80 },
+        "youtubeHandle": { "type": "string", "maxLength": 80 },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["uid", "displayName", "role"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Real-time message in a public community live chat channel.",
+      "type": "object",
+      "properties": {
+        "channelId": { "type": "string", "maxLength": 40 },
+        "senderId": { "type": "string", "maxLength": 128 },
+        "senderName": { "type": "string", "maxLength": 80 },
+        "senderAvatar": { "type": "string", "maxLength": 200000 },
+        "senderRole": { "type": "string", "maxLength": 40 },
+        "content": { "type": "string", "maxLength": 1000 },
+        "replyToId": { "type": "string", "maxLength": 128 },
+        "replyToPreview": { "type": "string", "maxLength": 160 },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["channelId", "senderId", "senderName", "senderRole", "content", "createdAt"]
+    },
+    "DMThread": {
+      "title": "DMThread",
+      "description": "Private 1-on-1 direct message thread between two members.",
+      "type": "object",
+      "properties": {
+        "participantIds": { "type": "array" },
+        "participantNames": { "type": "object" },
+        "participantAvatars": { "type": "object" },
+        "lastMessage": { "type": "string", "maxLength": 400 },
+        "lastSenderId": { "type": "string", "maxLength": 128 },
+        "lastMessageAt": { "type": "string", "maxLength": 50 },
+        "createdAt": { "type": "string", "maxLength": 50 },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["participantIds", "createdAt"]
+    },
+    "DMMessage": {
+      "title": "DMMessage",
+      "description": "Private message inside a direct message thread.",
+      "type": "object",
+      "properties": {
+        "threadId": { "type": "string", "maxLength": 260 },
+        "senderId": { "type": "string", "maxLength": 128 },
+        "senderName": { "type": "string", "maxLength": 80 },
+        "content": { "type": "string", "maxLength": 2000 },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["threadId", "senderId", "senderName", "content", "createdAt"]
+    },
+    "Reel": {
+      "title": "Reel",
+      "description": "Short-form vertical video reel shared by creators and members.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 120 },
+        "caption": { "type": "string", "maxLength": 500 },
+        "category": { "type": "string", "maxLength": 40 },
+        "videoUrl": { "type": "string", "maxLength": 1500 },
+        "thumbnailUrl": { "type": "string", "maxLength": 1500 },
+        "authorId": { "type": "string", "maxLength": 128 },
+        "authorName": { "type": "string", "maxLength": 100 },
+        "authorAvatar": { "type": "string", "maxLength": 200000 },
+        "authorRole": { "type": "string", "maxLength": 40 },
+        "likesCount": { "type": "number" },
+        "commentsCount": { "type": "number" },
+        "viewsCount": { "type": "number" },
+        "featured": { "type": "boolean" },
+        "createdAt": { "type": "string", "maxLength": 50 },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["title", "category", "videoUrl", "authorId", "authorName"]
+    },
+    "ReelLike": {
+      "title": "ReelLike",
+      "description": "Single like record by an authenticated user for a reel.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["userId"]
+    },
+    "ReelComment": {
+      "title": "ReelComment",
+      "description": "Comment on a reel video.",
+      "type": "object",
+      "properties": {
+        "reelId": { "type": "string", "maxLength": 128 },
+        "authorId": { "type": "string", "maxLength": 128 },
+        "authorName": { "type": "string", "maxLength": 100 },
+        "authorAvatar": { "type": "string", "maxLength": 200000 },
+        "authorRole": { "type": "string", "maxLength": 40 },
+        "content": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["reelId", "authorId", "authorName", "content"]
     },
     "Feedback": {
       "title": "Feedback",
@@ -261,7 +371,35 @@
     },
     "/users/{userId}": {
       "schema": "UserProfile",
-      "description": "User profiles and account settings."
+      "description": "Private user profiles and account settings."
+    },
+    "/publicProfiles/{userId}": {
+      "schema": "PublicProfile",
+      "description": "Non-PII public member directory for DMs, chat, and reels."
+    },
+    "/chatChannels/{channelId}/messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "Real-time community live chat channel messages."
+    },
+    "/dmThreads/{threadId}": {
+      "schema": "DMThread",
+      "description": "Private 1-on-1 direct message thread metadata."
+    },
+    "/dmThreads/{threadId}/messages/{messageId}": {
+      "schema": "DMMessage",
+      "description": "Private messages within a direct message thread."
+    },
+    "/reels/{reelId}": {
+      "schema": "Reel",
+      "description": "Short-form vertical creator and community reels."
+    },
+    "/reels/{reelId}/likes/{userId}": {
+      "schema": "ReelLike",
+      "description": "Individual user likes on a reel."
+    },
+    "/reels/{reelId}/comments/{commentId}": {
+      "schema": "ReelComment",
+      "description": "Comments on a reel."
     },
     "/feedback/{feedbackId}": {
       "schema": "Feedback",

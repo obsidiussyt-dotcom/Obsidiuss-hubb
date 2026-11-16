@@ -30,6 +30,10 @@ service cloud.firestore {
       return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
+    function isValidThreadId(id) {
+      return id is string && id.size() > 0 && id.size() <= 260 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
     function incoming() {
       return request.resource.data;
     }
@@ -95,6 +99,65 @@ service cloud.firestore {
              data.role is string && data.role.size() > 0 && data.role.size() <= 40 &&
              (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 200000)) &&
              (!('bio' in data) || (data.bio is string && data.bio.size() <= 600));
+    }
+
+    function isValidPublicProfile(data) {
+      return !('email' in data) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() <= 128 &&
+             data.displayName is string && data.displayName.size() > 0 && data.displayName.size() <= 80 &&
+             data.role is string && data.role.size() > 0 && data.role.size() <= 40 &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 200000)) &&
+             (!('bio' in data) || (data.bio is string && data.bio.size() <= 600));
+    }
+
+    function isValidChatMessage(data) {
+      return data.channelId is string && data.channelId.size() > 0 && data.channelId.size() <= 40 &&
+             data.senderId is string && data.senderId.size() > 0 && data.senderId.size() <= 128 &&
+             data.senderName is string && data.senderName.size() > 0 && data.senderName.size() <= 80 &&
+             data.senderRole is string && data.senderRole.size() > 0 && data.senderRole.size() <= 40 &&
+             data.content is string && data.content.size() > 0 && data.content.size() <= 1000 &&
+             (!('senderAvatar' in data) || (data.senderAvatar is string && data.senderAvatar.size() <= 200000)) &&
+             (!('replyToPreview' in data) || (data.replyToPreview is string && data.replyToPreview.size() <= 160));
+    }
+
+    function isValidDMThread(data) {
+      return data.participantIds is list && data.participantIds.size() == 2 &&
+             data.participantIds[0] is string && data.participantIds[1] is string &&
+             data.participantIds[0] != data.participantIds[1] &&
+             (!('lastMessage' in data) || (data.lastMessage is string && data.lastMessage.size() <= 400)) &&
+             (!('lastSenderId' in data) || (data.lastSenderId is string && data.lastSenderId.size() <= 128));
+    }
+
+    function isValidDMMessage(data) {
+      return data.threadId is string && data.threadId.size() > 0 && data.threadId.size() <= 260 &&
+             data.senderId is string && data.senderId.size() > 0 && data.senderId.size() <= 128 &&
+             data.senderName is string && data.senderName.size() > 0 && data.senderName.size() <= 80 &&
+             data.content is string && data.content.size() > 0 && data.content.size() <= 2000;
+    }
+
+    function isDMParticipant(tid) {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/dmThreads/$(tid)) &&
+             request.auth.uid in get(/databases/$(database)/documents/dmThreads/$(tid)).data.participantIds;
+    }
+
+    function isValidReel(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 120 &&
+             (!('caption' in data) || (data.caption is string && data.caption.size() <= 500)) &&
+             data.category is string && data.category.size() > 0 && data.category.size() <= 40 &&
+             data.videoUrl is string && data.videoUrl.size() > 0 && data.videoUrl.size() <= 1500 &&
+             (!('thumbnailUrl' in data) || (data.thumbnailUrl is string && data.thumbnailUrl.size() <= 1500)) &&
+             data.authorId is string && data.authorId.size() > 0 && data.authorId.size() <= 128 &&
+             data.authorName is string && data.authorName.size() > 0 && data.authorName.size() <= 100 &&
+             (!('authorAvatar' in data) || (data.authorAvatar is string && data.authorAvatar.size() <= 200000));
+    }
+
+    function isValidReelComment(data) {
+      return data.reelId is string && data.reelId.size() > 0 && data.reelId.size() <= 128 &&
+             data.authorId is string && data.authorId.size() > 0 && data.authorId.size() <= 128 &&
+             data.authorName is string && data.authorName.size() > 0 && data.authorName.size() <= 100 &&
+             data.content is string && data.content.size() > 0 && data.content.size() <= 500 &&
+             (!('authorAvatar' in data) || (data.authorAvatar is string && data.authorAvatar.size() <= 200000));
     }
 
     function isValidFeedback(data) {
@@ -270,10 +333,10 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isSignedIn() && isValidId(userId) && (userId == request.auth.uid || isAdmin());
       allow list: if isAdmin();
-      allow create: if isVerified() && isValidId(userId) && userId == request.auth.uid &&
+      allow create: if isSignedIn() && isValidId(userId) && userId == request.auth.uid &&
                        isValidUserProfile(incoming()) &&
                        (incoming().role == 'Member' || incoming().role == 'member' || isAdmin());
-      allow update: if isVerified() && isValidId(userId) && isValidUserProfile(incoming()) && (
+      allow update: if isSignedIn() && isValidId(userId) && isValidUserProfile(incoming()) && (
         isAdmin() ||
         (
           userId == request.auth.uid &&
@@ -284,7 +347,118 @@ service cloud.firestore {
       allow delete: if isAdmin() && isValidId(userId);
     }
 
-    // 7. Feedback / Contact messages
+    // 6b. Public Member Profiles (Zero PII: strictly no email)
+    match /publicProfiles/{userId} {
+      allow get: if isValidId(userId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(userId) && userId == request.auth.uid &&
+                       isValidPublicProfile(incoming()) &&
+                       incoming().uid == request.auth.uid &&
+                       (incoming().role == 'Member' || isAdmin());
+      allow update: if isSignedIn() && isValidId(userId) && isValidPublicProfile(incoming()) && (
+        isAdmin() ||
+        (
+          userId == request.auth.uid &&
+          incoming().uid == existing().uid &&
+          incoming().role == existing().role &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'bio', 'discordHandle', 'youtubeHandle', 'updatedAt'])
+        )
+      );
+      allow delete: if isAdmin() && isValidId(userId);
+    }
+
+    // 7. Live Chat Channels
+    match /chatChannels/{channelId}/messages/{messageId} {
+      allow list: if isValidId(channelId);
+      allow get: if isValidId(channelId) && isValidId(messageId);
+      allow create: if isVerified() && isValidId(channelId) && isValidId(messageId) &&
+                       isValidChatMessage(incoming()) &&
+                       incoming().senderId == request.auth.uid &&
+                       incoming().channelId == channelId;
+      allow delete: if isValidId(channelId) && isValidId(messageId) && (isAdmin() || (isVerified() && existing().senderId == request.auth.uid));
+    }
+
+    // 8. Private Direct Messages (Strict Participant Isolation)
+    match /dmThreads/{threadId} {
+      allow list: if isSignedIn() && request.auth.uid in resource.data.participantIds;
+      allow get: if isSignedIn() && isValidThreadId(threadId) && (resource == null || request.auth.uid in existing().participantIds || isAdmin());
+      allow create: if isVerified() && isValidThreadId(threadId) &&
+                       isValidDMThread(incoming()) &&
+                       request.auth.uid in incoming().participantIds;
+      allow update: if isVerified() && isValidThreadId(threadId) &&
+                       isValidDMThread(incoming()) &&
+                       request.auth.uid in existing().participantIds &&
+                       incoming().participantIds == existing().participantIds &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['participantNames', 'participantAvatars', 'lastMessage', 'lastSenderId', 'lastMessageAt', 'updatedAt']);
+
+      match /messages/{messageId} {
+        allow list, get: if isValidThreadId(threadId) && isDMParticipant(threadId);
+        allow create: if isVerified() && isValidThreadId(threadId) && isValidId(messageId) &&
+                         isDMParticipant(threadId) &&
+                         isValidDMMessage(incoming()) &&
+                         incoming().senderId == request.auth.uid &&
+                         incoming().threadId == threadId;
+        allow delete: if isValidThreadId(threadId) && isValidId(messageId) &&
+                         (isAdmin() || (isVerified() && isDMParticipant(threadId) && existing().senderId == request.auth.uid));
+      }
+    }
+
+    // 9. Creator & Community Reels
+    match /reels/{reelId} {
+      allow list: if true;
+      allow get: if isValidId(reelId);
+      allow create: if isVerified() && isValidId(reelId) && isValidReel(incoming()) && incoming().authorId == request.auth.uid;
+      allow update: if isValidId(reelId) && isValidReel(incoming()) && (
+        isAdmin() ||
+        (
+          isVerified() &&
+          existing().authorId == request.auth.uid &&
+          incoming().authorId == existing().authorId &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'caption', 'category', 'updatedAt'])
+        ) ||
+        (
+          isVerified() &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['likesCount']) &&
+          incoming().likesCount is number && incoming().likesCount >= 0
+        ) ||
+        (
+          isVerified() &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['commentsCount']) &&
+          incoming().commentsCount is number && incoming().commentsCount >= 0
+        ) ||
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly(['viewsCount']) &&
+          incoming().viewsCount is number &&
+          incoming().viewsCount == existing().viewsCount + 1
+        )
+      );
+      allow delete: if isValidId(reelId) && (isAdmin() || (isVerified() && existing().authorId == request.auth.uid));
+
+      match /likes/{userId} {
+        allow list: if isValidId(reelId);
+        allow get: if isValidId(reelId) && isValidId(userId);
+        allow create: if isVerified() && isValidId(reelId) && isValidId(userId) &&
+                         userId == request.auth.uid &&
+                         exists(/databases/$(database)/documents/reels/$(reelId)) &&
+                         incoming().keys().hasAll(['userId', 'createdAt']) &&
+                         incoming().keys().hasOnly(['userId', 'createdAt']) &&
+                         incoming().userId == request.auth.uid;
+        allow delete: if isValidId(reelId) && isValidId(userId) && (isAdmin() || (isVerified() && userId == request.auth.uid));
+      }
+
+      match /comments/{commentId} {
+        allow list: if isValidId(reelId);
+        allow get: if isValidId(reelId) && isValidId(commentId);
+        allow create: if isVerified() && isValidId(reelId) && isValidId(commentId) &&
+                         exists(/databases/$(database)/documents/reels/$(reelId)) &&
+                         isValidReelComment(incoming()) &&
+                         incoming().authorId == request.auth.uid &&
+                         incoming().reelId == reelId;
+        allow delete: if isValidId(reelId) && isValidId(commentId) && (isAdmin() || (isVerified() && existing().authorId == request.auth.uid));
+      }
+    }
+
+    // 10. Feedback / Contact messages
     match /feedback/{feedbackId} {
       allow create: if isValidId(feedbackId) && isValidFeedback(incoming()) &&
                        incoming().status == 'new';
@@ -292,7 +466,7 @@ service cloud.firestore {
       allow list: if isAdmin();
     }
 
-    // 8. Abuse and Content Moderation Reports
+    // 11. Abuse and Content Moderation Reports
     match /reports/{reportId} {
       allow create: if isVerified() && isValidId(reportId) && isValidReport(incoming()) &&
                        incoming().reporterId == request.auth.uid &&
@@ -301,7 +475,7 @@ service cloud.firestore {
       allow list: if isAdmin();
     }
 
-    // 9. Site Analytics Counter
+    // 12. Site Analytics Counter
     match /analytics/{docId} {
       allow get: if isValidId(docId);
       allow create: if docId == 'site' &&
@@ -319,7 +493,7 @@ service cloud.firestore {
       );
     }
 
-    // 10. Admin Whitelist Registry
+    // 13. Admin Whitelist Registry
     match /admins/{adminId} {
       allow get: if isSignedIn() && isValidId(adminId) && (adminId == request.auth.uid || isAdmin());
       allow list: if isAdmin();

@@ -3,13 +3,17 @@ import {
   User as FirebaseUser,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  sendEmailVerification,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   updateProfile as firebaseUpdateProfile,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db, handleFirestoreError, OperationType } from '../firebase';
-import { UserProfile, DownloadActivityItem } from '../types';
+import { UserProfile, PublicProfile, DownloadActivityItem } from '../types';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -17,17 +21,44 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   isCreator: boolean;
+  isVerifiedUser: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<void>;
+  resendVerificationEmail: () => Promise<void>;
+  refreshAuthUser: () => Promise<boolean>;
   signOut: () => Promise<void>;
   updateProfileData: (data: Partial<UserProfile>) => Promise<void>;
   toggleBookmark: (resourceId: string) => Promise<boolean>;
-  recordDownload: (resourceId: string, resourceMeta?: { title: string; version?: string; category?: string }) => Promise<void>;
+  recordDownload: (
+    resourceId: string,
+    resourceMeta?: { title: string; version?: string; category?: string }
+  ) => Promise<void>;
   downloadHistory: string[];
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const ADMIN_EMAIL = 'obsidiussyt@gmail.com';
+
+async function syncPublicProfileDoc(profile: UserProfile) {
+  const publicPayload: PublicProfile = {
+    uid: profile.uid,
+    displayName: profile.displayName || 'Community Member',
+    photoURL: profile.photoURL || '',
+    role: profile.role || 'Member',
+    bio: profile.bio || '',
+    discordHandle: profile.discordHandle || '',
+    youtubeHandle: profile.youtubeHandle || '',
+    updatedAt: new Date().toISOString(),
+  };
+  try {
+    await setDoc(doc(db, 'publicProfiles', profile.uid), publicPayload, { merge: true });
+  } catch (err) {
+    console.warn('Public profile sync warning:', err);
+  }
+}
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -75,14 +106,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               );
             }
             setProfile(data);
+            syncPublicProfileDoc(data);
           } else {
+            const fallbackName =
+              currentUser.displayName ||
+              currentUser.email?.split('@')[0] ||
+              (isMainAdmin ? 'Obsidiuss' : 'Community Member');
             const initialProfile: UserProfile = {
               uid: currentUser.uid,
-              displayName: currentUser.displayName || (isMainAdmin ? 'Obsidiuss' : 'Community Member'),
+              displayName: fallbackName.slice(0, 80),
               email: currentUser.email || '',
               photoURL: currentUser.photoURL || '',
               role: isMainAdmin ? 'Creator' : 'Member',
-              bio: isMainAdmin ? 'Creator & Developer of OBSIDIUSS HUB.' : '',
+              bio: isMainAdmin ? 'Owner & Creator of OBSIDIUSS HUB — Bhaskar Yadav (Obsidiuss).' : '',
               discordHandle: '',
               youtubeHandle: isMainAdmin ? '@obsidiuss' : '',
               downloadsCount: 0,
@@ -91,12 +127,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             };
             await setDoc(userDocRef, initialProfile);
             setProfile(initialProfile);
+            syncPublicProfileDoc(initialProfile);
           }
         } catch (error) {
           console.error('Error syncing user profile from Firestore:', error);
           setProfile({
             uid: currentUser.uid,
-            displayName: currentUser.displayName || (isMainAdmin ? 'Obsidiuss' : 'Community Member'),
+            displayName:
+              currentUser.displayName ||
+              currentUser.email?.split('@')[0] ||
+              (isMainAdmin ? 'Obsidiuss' : 'Community Member'),
             email: currentUser.email || '',
             photoURL: currentUser.photoURL || '',
             role: isMainAdmin ? 'Creator' : 'Member',
@@ -130,6 +170,74 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const signInWithEmail = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+    } catch (err) {
+      console.error('Email Sign In Error:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signUpWithEmail = async (email: string, password: string, displayName: string) => {
+    setLoading(true);
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      const cleanName = displayName.trim().slice(0, 80) || email.split('@')[0];
+      await firebaseUpdateProfile(cred.user, { displayName: cleanName });
+      try {
+        await sendEmailVerification(cred.user);
+      } catch (verifyErr) {
+        console.warn('Could not dispatch initial verification email:', verifyErr);
+      }
+      const userDocRef = doc(db, 'users', cred.user.uid);
+      const newProfile: UserProfile = {
+        uid: cred.user.uid,
+        displayName: cleanName,
+        email: cred.user.email || email.trim(),
+        photoURL: '',
+        role: 'Member',
+        bio: '',
+        discordHandle: '',
+        youtubeHandle: '',
+        downloadsCount: 0,
+        joinedAt: new Date().toISOString(),
+        bookmarks: [],
+      };
+      await setDoc(userDocRef, newProfile, { merge: true });
+      await syncPublicProfileDoc(newProfile);
+      setProfile(newProfile);
+    } catch (err) {
+      console.error('Email Sign Up Error:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendPasswordReset = async (email: string) => {
+    await sendPasswordResetEmail(auth, email.trim());
+  };
+
+  const resendVerificationEmail = async () => {
+    if (!auth.currentUser) throw new Error('Not signed in.');
+    await sendEmailVerification(auth.currentUser);
+  };
+
+  const refreshAuthUser = async (): Promise<boolean> => {
+    if (!auth.currentUser) return false;
+    await auth.currentUser.reload();
+    const updatedUser = auth.currentUser;
+    setUser({ ...updatedUser } as FirebaseUser);
+    return Boolean(
+      updatedUser.emailVerified ||
+        updatedUser.providerData.some((p) => p.providerId === 'google.com')
+    );
+  };
+
   const signOut = async () => {
     setProfile(null);
     setUser(null);
@@ -150,7 +258,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       try {
         await firebaseUpdateProfile(auth.currentUser, {
           displayName: data.displayName ?? auth.currentUser.displayName,
-          photoURL: data.photoURL ?? auth.currentUser.photoURL,
+          photoURL: data.photoURL && data.photoURL.startsWith('http') ? data.photoURL : auth.currentUser.photoURL,
         });
       } catch (e) {
         console.warn('Could not update Firebase Auth user profile object:', e);
@@ -159,6 +267,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     try {
       await setDoc(doc(db, 'users', user.uid), updated, { merge: true });
+      await syncPublicProfileDoc(updated);
     } catch (err) {
       handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`);
     }
@@ -211,9 +320,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const isVerifiedUser = Boolean(
+    user &&
+      (user.emailVerified || user.providerData.some((p) => p.providerId === 'google.com'))
+  );
+
   const isMainAdmin =
-    user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() &&
-    (user.emailVerified || user.providerData.some((p) => p.providerId === 'google.com'));
+    user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() && isVerifiedUser;
 
   const isAdmin = Boolean(isMainAdmin || hasAdminDoc);
   const isCreator = Boolean(isMainAdmin);
@@ -226,7 +339,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         loading,
         isAdmin,
         isCreator,
+        isVerifiedUser,
         signInWithGoogle,
+        signInWithEmail,
+        signUpWithEmail,
+        sendPasswordReset,
+        resendVerificationEmail,
+        refreshAuthUser,
         signOut,
         updateProfileData,
         toggleBookmark,

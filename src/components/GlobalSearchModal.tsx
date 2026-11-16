@@ -7,6 +7,7 @@ import {
   Bell,
   Users,
   ArrowRight,
+  Film,
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { Resource } from '../types';
@@ -25,7 +26,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
   onSelectResource,
   onNavigateTab,
 }) => {
-  const { resources, projects, announcements, discussions } = useData();
+  const { resources, projects, announcements, discussions, reels } = useData();
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -44,7 +45,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
 
   const searchResults = useMemo(() => {
     if (!searchTerm.trim()) {
-      return { resources: [], projects: [], announcements: [], discussions: [] };
+      return { resources: [], projects: [], announcements: [], discussions: [], reels: [] };
     }
     const query = searchTerm.toLowerCase();
 
@@ -74,13 +75,22 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
         (d.tags || []).some((t) => t.toLowerCase().includes(query))
     );
 
+    const matchedReels = reels.filter(
+      (r) =>
+        r.title.toLowerCase().includes(query) ||
+        (r.caption || '').toLowerCase().includes(query) ||
+        r.category.toLowerCase().includes(query) ||
+        r.authorName.toLowerCase().includes(query)
+    );
+
     return {
       resources: matchedResources.slice(0, 5),
       projects: matchedProjects.slice(0, 3),
       announcements: matchedAnnouncements.slice(0, 3),
       discussions: matchedDiscussions.slice(0, 4),
+      reels: matchedReels.slice(0, 3),
     };
-  }, [searchTerm, resources, projects, announcements, discussions]);
+  }, [searchTerm, resources, projects, announcements, discussions, reels]);
 
   if (!isOpen) return null;
 
@@ -88,7 +98,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
     searchResults.resources.length +
     searchResults.projects.length +
     searchResults.announcements.length +
-    searchResults.discussions.length;
+    searchResults.discussions.length +
+    searchResults.reels.length;
 
   return (
     <div
@@ -229,6 +240,36 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                           </p>
                         </div>
                         <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-cyan-400 transition" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {searchResults.reels.length > 0 && (
+                <div>
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-rose-400 mb-2 flex items-center gap-1.5">
+                    <Film className="w-3.5 h-3.5" /> Reels
+                  </h4>
+                  <div className="space-y-1.5">
+                    {searchResults.reels.map((reel) => (
+                      <button
+                        key={reel.id}
+                        onClick={() => {
+                          onNavigateTab('reels', { reelId: reel.id });
+                          onClose();
+                        }}
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/5 transition text-left group"
+                      >
+                        <div>
+                          <p className="text-xs font-bold text-white group-hover:text-rose-300 transition">
+                            {reel.title}
+                          </p>
+                          <p className="text-[11px] text-zinc-400">
+                            {reel.category} · By {reel.authorName}
+                          </p>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-rose-400 transition" />
                       </button>
                     ))}
                   </div>

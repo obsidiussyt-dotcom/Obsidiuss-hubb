@@ -23,6 +23,7 @@ import { useToast } from '../context/ToastContext';
 import { Comment } from '../types';
 import { CreateDiscussionModal } from '../components/CreateDiscussionModal';
 import { UserAvatar } from '../components/UserAvatar';
+import { RoleBadge } from '../components/RoleBadge';
 import type { NavigateOptions } from '../App';
 import { buildHref } from '../App';
 
@@ -220,19 +221,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
                   <span className="text-sm font-bold text-slate-950">
                     {selectedDiscussion.authorName}
                   </span>
-                  <span
-                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                      selectedDiscussion.authorRole === 'Creator'
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                        : selectedDiscussion.authorRole === 'Admin'
-                        ? 'bg-orange-50 text-orange-700 border border-orange-200'
-                        : selectedDiscussion.authorRole === 'VIP'
-                        ? 'bg-pink-50 text-pink-700 border border-pink-200'
-                        : 'bg-slate-100 text-slate-600 border border-slate-200'
-                    }`}
-                  >
-                    {selectedDiscussion.authorRole}
-                  </span>
+                  <RoleBadge role={selectedDiscussion.authorRole} size="xs" />
                 </div>
                 <span className="text-[11px] text-slate-500">
                   Posted {new Date(selectedDiscussion.createdAt).toLocaleDateString()} in{' '}
@@ -515,9 +504,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({
                             <span className="text-xs font-bold text-slate-950">
                               {comment.authorName}
                             </span>
-                            <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200">
-                              {comment.authorRole}
-                            </span>
+                            <RoleBadge role={comment.authorRole} size="xs" />
                           </div>
                           <span className="text-[10px] text-slate-400">
                             {new Date(comment.createdAt).toLocaleDateString()}

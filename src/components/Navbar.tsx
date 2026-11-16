@@ -23,6 +23,7 @@ import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { UserAvatar } from './UserAvatar';
 import { BrandLogo } from './BrandLogo';
+import { RoleBadge } from './RoleBadge';
 
 interface NavbarProps {
   currentTab: string;
@@ -283,10 +284,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                       {profile.displayName}
                     </p>
                     <p className="text-[11px] text-slate-500 truncate">{profile.email}</p>
-                    <p className="text-[10px] font-semibold text-blue-600 mt-1">
-                      {profile.role}
-                      {profile.downloadsCount > 0 ? ` · ${profile.downloadsCount} downloads` : ''}
-                    </p>
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <RoleBadge role={profile.role} size="xs" />
+                      {profile.downloadsCount > 0 && (
+                        <span className="text-[10px] text-slate-400">
+                          · {profile.downloadsCount} dl
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <button

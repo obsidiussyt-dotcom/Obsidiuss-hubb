@@ -2,12 +2,36 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { getAnalytics, isSupported } from 'firebase/analytics';
 import firebaseConfig from '../firebase-applet-config.json';
 
+// Initialize the Firebase app with the target project configuration
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId); /* CRITICAL: The app will break without this line */
+
+// Connect to default Firestore or specified database instance
+export const db =
+  firebaseConfig.firestoreDatabaseId &&
+  firebaseConfig.firestoreDatabaseId !== '(default)' &&
+  firebaseConfig.firestoreDatabaseId !== ''
+    ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
+    : getFirestore(app);
+
 export const auth = getAuth(app);
 export const storage = getStorage(app);
+
+// Safe client-side Google Analytics initialization (skips SSR / unsupported sandboxes)
+export let analytics: ReturnType<typeof getAnalytics> | null = null;
+if (typeof window !== 'undefined') {
+  isSupported()
+    .then((supported) => {
+      if (supported && firebaseConfig.measurementId) {
+        analytics = getAnalytics(app);
+      }
+    })
+    .catch(() => {
+      // Analytics unsupported or blocked (e.g., adblocker or cookie policy)
+    });
+}
 
 export enum OperationType {
   CREATE = 'create',
@@ -61,9 +85,11 @@ async function testConnection() {
     await getDocFromServer(doc(db, 'test', 'connection'));
   } catch (error) {
     if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error('Please check your Firebase configuration.');
+      console.warn('Firebase client is offline or network connection is pending.');
     }
   }
 }
 
 testConnection();
+
+export default app;

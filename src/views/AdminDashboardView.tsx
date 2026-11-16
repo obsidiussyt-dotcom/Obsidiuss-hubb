@@ -22,6 +22,7 @@ import {
   XCircle,
   RefreshCw,
   Film,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth, ADMIN_EMAIL } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -36,6 +37,7 @@ import {
   UserProfile,
 } from '../types';
 import { UserAvatar } from '../components/UserAvatar';
+import { RoleBadge } from '../components/RoleBadge';
 
 interface AdminDashboardViewProps {
   openAuth: () => void;
@@ -499,6 +501,88 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     }
   };
 
+  // Starter Data Seeder for fresh databases
+  const [seeding, setSeeding] = useState(false);
+  const handleSeedStarterData = async () => {
+    setSeeding(true);
+    try {
+      showToast('Seeding starter content to Obsidiuss Hub...', 'info');
+
+      if (categories.length === 0) {
+        await addCategory({ name: 'Minecraft Mods & Clients', slug: 'minecraft', description: 'Custom clients, FPS boosters, and QoL mods' });
+        await addCategory({ name: 'Android Apps & APKs', slug: 'android', description: 'Native utility APKs and launchers' });
+        await addCategory({ name: 'PC Software & Tools', slug: 'pc-software', description: 'Desktop performance tools and scripts' });
+      }
+
+      if (resources.length === 0) {
+        await addResource({
+          title: 'Obsidian Client v2.4 (Performance & PVP)',
+          description: 'High-performance Minecraft client with optimized JVM flags, fast chunk loading, built-in keystrokes, and customizable HUD.',
+          category: 'minecraft',
+          version: '2.4.0',
+          downloadUrl: 'https://github.com/obsidiuss/obsidian-client/releases/download/v2.4.0/ObsidianClient-v2.4.0.jar',
+          thumbnailUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80',
+          fileSize: '18.4 MB',
+          featured: true,
+          changelog: '- 30% reduction in memory overhead\n- Smooth 240Hz frame pacing\n- Updated keystrokes & ping display',
+          requirements: 'Java 17+ or Java 21, Minecraft 1.20.x or 1.21.x',
+          tags: ['PVP', 'FPS Booster', 'Client', 'Fabric'],
+          authorId: profile?.uid || user.uid,
+          authorName: 'Bhaskar Yadav (Obsidiuss)',
+        });
+        await addResource({
+          title: 'CraftForge Android Launcher v1.8',
+          description: 'Native Android application enabling high-FPS portable Minecraft with Fabric mod loader support and on-screen gesture controls.',
+          category: 'android',
+          version: '1.8.2',
+          downloadUrl: 'https://github.com/obsidiuss/craftforge-android/releases/download/v1.8.2/CraftForge-v1.8.2.apk',
+          thumbnailUrl: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80',
+          fileSize: '32.1 MB',
+          featured: true,
+          changelog: '- Added Vulkan rendering support\n- Low latency touch mapping\n- Battery saver profile',
+          requirements: 'Android 10.0+ (ARM64)',
+          tags: ['Android', 'Launcher', 'APK', 'Fabric'],
+          authorId: profile?.uid || user.uid,
+          authorName: 'Bhaskar Yadav (Obsidiuss)',
+        });
+      }
+
+      if (projects.length === 0) {
+        await addProject({
+          title: 'Obsidian Core Modloader',
+          tagline: 'Lightweight cross-platform JVM architecture for high-tickrate game engines.',
+          description: 'Open-source modular core engineered by Obsidiuss (Bhaskar Yadav) for high-performance client modding, zero-overhead mixins, and low-latency rendering.',
+          category: 'Minecraft Client',
+          status: 'Active',
+          bannerUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80',
+          demoUrl: 'https://youtube.com/@obsidiuss?feature=shared',
+          githubUrl: 'https://github.com/obsidiuss',
+          downloadUrl: 'https://github.com/obsidiuss',
+          tags: ['Kotlin', 'JVM', 'C++', 'OpenGL'],
+          featured: true,
+        });
+      }
+
+      if (announcements.length === 0) {
+        await addAnnouncement({
+          title: 'Welcome to OBSIDIUSS HUB – Official Creator & Modding Platform',
+          excerpt: 'Welcome to the official hub owned by Bhaskar Yadav (Obsidiuss). Explore verified software, creator reels, live chat rooms, and private DMs.',
+          content: 'Welcome to OBSIDIUSS HUB!\n\nThis platform serves as our central portal for all verified software releases, Minecraft clients, Android APKs, developer tools, and community discussions.\n\nKey Platform Features:\n• Verified Downloads & User Reviews\n• Instagram-Style Vertical Reels with sound & comments\n• Real-Time Live Chat Lounge\n• Direct 1-on-1 Messages (DMs)\n• Technical Forum & Devlogs\n\nStay connected on YouTube (@obsidiuss) and join our official Discord!',
+          category: 'Release',
+          pinned: true,
+          authorId: profile?.uid || user.uid,
+          authorName: 'Bhaskar Yadav (Obsidiuss)',
+        });
+      }
+
+      showToast('Starter content seeded successfully!', 'success');
+    } catch (err: any) {
+      showToast('Seeding error: ' + (err?.message || err), 'error');
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   // Real Analytics Totals
   const totalDownloads = resources.reduce((acc, r) => acc + (r.downloadsCount || 0), 0);
   const pendingReportsCount = reportsList.filter((r) => r.status === 'pending').length;
@@ -579,6 +663,18 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
             </p>
           </div>
         </div>
+
+        {resources.length === 0 && (
+          <button
+            type="button"
+            onClick={handleSeedStarterData}
+            disabled={seeding}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-md shadow-blue-600/20 transition shrink-0 disabled:opacity-50"
+          >
+            <Sparkles className={`w-3.5 h-3.5 ${seeding ? 'animate-spin' : ''}`} />
+            <span>{seeding ? 'Seeding Content...' : 'Seed Starter Content'}</span>
+          </button>
+        )}
       </div>
 
       {/* Admin Navigation Tabs */}
@@ -1918,23 +2014,24 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                           </td>
                           <td className="p-4 text-right">
                             {isMasterCreator ? (
-                              <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 font-bold text-[11px]">
-                                Creator
-                              </span>
+                              <RoleBadge role="Creator" size="xs" />
                             ) : (
-                              <select
-                                value={u.role}
-                                onChange={async (e) => {
-                                  const nextRole = e.target.value as UserProfile['role'];
-                                  await updateUserRole(u.uid, nextRole);
-                                  showToast(`Updated ${u.displayName}'s role to ${nextRole}.`, 'success');
-                                }}
-                                className="bg-slate-50 border border-slate-200 text-slate-900 text-xs rounded-lg px-2 py-1"
-                              >
-                                <option value="Member">Member</option>
-                                <option value="VIP">VIP</option>
-                                <option value="Moderator">Moderator</option>
-                              </select>
+                              <div className="inline-flex items-center gap-2">
+                                <RoleBadge role={u.role} size="xs" />
+                                <select
+                                  value={u.role}
+                                  onChange={async (e) => {
+                                    const nextRole = e.target.value as UserProfile['role'];
+                                    await updateUserRole(u.uid, nextRole);
+                                    showToast(`Updated ${u.displayName}'s role to ${nextRole}.`, 'success');
+                                  }}
+                                  className="bg-slate-50 border border-slate-200 text-slate-900 text-xs rounded-lg px-2 py-1 font-semibold focus:outline-none focus:border-blue-500"
+                                >
+                                  <option value="Member">Member</option>
+                                  <option value="VIP">VIP</option>
+                                  <option value="Moderator">Moderator</option>
+                                </select>
+                              </div>
                             )}
                           </td>
                         </tr>

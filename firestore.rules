@@ -8,20 +8,19 @@ service cloud.firestore {
     }
 
     // Helper functions
+    // Helper functions
     function isSignedIn() {
       return request.auth != null;
     }
 
     function isVerified() {
-      return isSignedIn() && (
-        request.auth.token.email_verified == true ||
-        request.auth.token.firebase.sign_in_provider == 'google.com'
-      );
+      // Both Google and Email authenticated users enjoy equal permissions across the hub
+      return isSignedIn();
     }
 
     function isAdmin() {
       return isSignedIn() && (
-        (request.auth.token.email == 'obsidiussyt@gmail.com' && isVerified()) ||
+        request.auth.token.email == 'obsidiussyt@gmail.com' ||
         exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }
@@ -498,6 +497,11 @@ service cloud.firestore {
       allow get: if isSignedIn() && isValidId(adminId) && (adminId == request.auth.uid || isAdmin());
       allow list: if isAdmin();
       allow create, update, delete: if isAdmin() && isValidId(adminId);
+    }
+
+    // 14. Connection Test Probe
+    match /test/{docId} {
+      allow get: if true;
     }
   }
 }

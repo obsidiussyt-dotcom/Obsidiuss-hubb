@@ -79,9 +79,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(currentUser);
       if (currentUser) {
         const isMainAdmin =
-          currentUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() &&
-          (currentUser.emailVerified ||
-            currentUser.providerData.some((p) => p.providerId === 'google.com'));
+          currentUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
         try {
           // Check /admins/{uid} doc in case additional admin is registered
@@ -320,13 +318,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const isVerifiedUser = Boolean(
-    user &&
-      (user.emailVerified || user.providerData.some((p) => p.providerId === 'google.com'))
-  );
+  const isVerifiedUser = Boolean(user);
 
   const isMainAdmin =
-    user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() && isVerifiedUser;
+    Boolean(user?.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
 
   const isAdmin = Boolean(isMainAdmin || hasAdminDoc);
   const isCreator = Boolean(isMainAdmin);

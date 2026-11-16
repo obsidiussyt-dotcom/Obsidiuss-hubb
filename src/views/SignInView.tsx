@@ -12,6 +12,7 @@ import { AuthExperience } from '../components/AuthExperience';
 import { BrandLogo } from '../components/BrandLogo';
 import { useAuth } from '../context/AuthContext';
 import { UserAvatar } from '../components/UserAvatar';
+import { RoleBadge } from '../components/RoleBadge';
 import type { NavigateOptions } from '../App';
 
 interface SignInViewProps {
@@ -70,9 +71,10 @@ export const SignInView: React.FC<SignInViewProps> = ({
                   <h2 className="font-display text-xl font-black text-slate-950">
                     Welcome back, {profile.displayName}
                   </h2>
-                  <p className="text-xs text-slate-500">
-                    {profile.role} · {profile.email}
-                  </p>
+                  <div className="flex items-center justify-center gap-2 pt-0.5">
+                    <RoleBadge role={profile.role} size="sm" />
+                    <span className="text-xs text-slate-500 font-mono">({profile.email})</span>
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                   <button

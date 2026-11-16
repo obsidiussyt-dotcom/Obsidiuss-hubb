@@ -20,6 +20,7 @@ import { useData } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
 import { Resource, Comment, ResourceRating } from '../types';
 import { UserAvatar } from '../components/UserAvatar';
+import { RoleBadge } from '../components/RoleBadge';
 import type { NavigateOptions } from '../App';
 
 interface UserDashboardViewProps {
@@ -232,19 +233,7 @@ export const UserDashboardView: React.FC<UserDashboardViewProps> = ({
               <h1 className="font-display text-xl sm:text-2xl font-extrabold text-slate-950">
                 {profile.displayName}
               </h1>
-              <span
-                className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
-                  profile.role === 'Creator'
-                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                    : profile.role === 'Admin'
-                    ? 'bg-orange-50 text-orange-700 border border-orange-200'
-                    : profile.role === 'VIP'
-                    ? 'bg-pink-50 text-pink-700 border border-pink-200'
-                    : 'bg-slate-100 text-slate-700 border border-slate-200'
-                }`}
-              >
-                {profile.role}
-              </span>
+              <RoleBadge role={profile.role} size="sm" />
             </div>
 
             <p className="text-xs text-slate-600 max-w-lg leading-relaxed">

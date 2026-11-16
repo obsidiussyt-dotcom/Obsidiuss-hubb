@@ -436,18 +436,6 @@ function MainApp() {
         onOpenRules={() => setIsRulesOpen(true)}
       />
 
-      {!isVerifiedUser && (
-        <div className="border-b border-orange-200 bg-orange-50 px-4 py-2 text-center text-xs text-orange-900 flex flex-wrap items-center justify-center gap-2">
-          <span>Verify your email address to post in Live Chat, DMs, Reels, and Forum.</span>
-          <button
-            type="button"
-            onClick={() => setIsAuthOpen(true)}
-            className="font-bold underline text-orange-700 hover:text-orange-950"
-          >
-            Verify now
-          </button>
-        </div>
-      )}
 
       <main id="main-content" className="flex-1">
         {currentTab === 'home' && (

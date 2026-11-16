@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
+  "installCommand": "npm install --no-audit --no-fund",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "headers": [
@@ -33,7 +34,7 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!assets/).*)",
+      "source": "/((?!assets/|sw\\.js$|manifest\\.json$|robots\\.txt$|sitemap\\.xml$|icon\\.svg$|apple-touch-icon\\.png$|pwa-.*\\.png$).*)",
       "destination": "/index.html"
     }
   ]

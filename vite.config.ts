@@ -22,8 +22,14 @@ export default defineConfig(() => {
             if (id.includes('node_modules/@firebase/firestore')) {
               return 'firebase-firestore';
             }
+            if (id.includes('node_modules/@firebase/auth')) {
+              return 'firebase-auth';
+            }
             if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) {
               return 'firebase-core';
+            }
+            if (id.includes('node_modules/motion') || id.includes('node_modules/framer-motion')) {
+              return 'motion-vendor';
             }
             if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
               return 'react-vendor';

@@ -14,7 +14,7 @@ import {
   limit,
   onSnapshot,
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { db, storage, handleFirestoreError, OperationType } from '../firebase';
 import {
   Resource,
@@ -126,8 +126,22 @@ interface DataContextType {
   // User Role management (Admin)
   updateUserRole: (uid: string, role: UserProfile['role']) => Promise<void>;
 
-  // File Upload (Firebase Storage)
-  uploadFile: (file: File, folder: string) => Promise<string>;
+  // File Upload (Firebase Storage + fast client-side compression & progress)
+  uploadFile: (file: File, folder: string, options?: UploadFileOptions) => Promise<string>;
+}
+
+export interface UploadProgressInfo {
+  percent: number;
+  transferredBytes: number;
+  totalBytes: number;
+  stage: 'compressing' | 'uploading' | 'finalizing';
+}
+
+export interface UploadFileOptions {
+  onProgress?: (info: UploadProgressInfo) => void;
+  signal?: AbortSignal;
+  compressImage?: boolean;
+  allowDataUrlFallback?: boolean;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -1386,12 +1400,222 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // --- Firebase Storage File Upload ---
-  const uploadFile = async (file: File, folder: string): Promise<string> => {
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const compressImageFile = (file: File, maxDim = 1280, quality = 0.82): Promise<File> => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('image/') || file.type === 'image/gif' || file.size < 120 * 1024) {
+        resolve(file);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onerror = () => resolve(file);
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => resolve(file);
+        img.onload = () => {
+          const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+          const width = Math.max(1, Math.round(img.width * scale));
+          const height = Math.max(1, Math.round(img.height * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(file);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob(
+            (blob) => {
+              if (!blob || blob.size >= file.size) {
+                resolve(file);
+                return;
+              }
+              const baseName = file.name.replace(/\.[^.]+$/, '');
+              resolve(new File([blob], `${baseName}.jpg`, { type: 'image/jpeg' }));
+            },
+            'image/jpeg',
+            quality
+          );
+        };
+        img.src = String(reader.result);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const compressImageToDataUrl = (file: File, maxDim = 800): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Could not read image'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Invalid image'));
+        img.onload = () => {
+          const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+          const width = Math.max(1, Math.round(img.width * scale));
+          const height = Math.max(1, Math.round(img.height * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Canvas unavailable'));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          let dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          if (dataUrl.length > 175000) {
+            dataUrl = canvas.toDataURL('image/jpeg', 0.62);
+          }
+          if (dataUrl.length > 185000) {
+            reject(new Error('Image too large after compression'));
+            return;
+          }
+          resolve(dataUrl);
+        };
+        img.src = String(reader.result);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // --- Fast Resumable File Upload (with compression, live progress & stall guard) ---
+  const uploadFile = async (
+    file: File,
+    folder: string,
+    options: UploadFileOptions = {}
+  ): Promise<string> => {
+    const {
+      onProgress,
+      signal,
+      compressImage = true,
+      allowDataUrlFallback = folder === 'images',
+    } = options;
+
+    if (signal?.aborted) {
+      throw new DOMException('Upload cancelled', 'AbortError');
+    }
+
+    let targetFile = file;
+    if (compressImage && file.type.startsWith('image/')) {
+      onProgress?.({
+        percent: 5,
+        transferredBytes: 0,
+        totalBytes: file.size,
+        stage: 'compressing',
+      });
+      targetFile = await compressImageFile(file);
+    }
+
+    if (signal?.aborted) {
+      throw new DOMException('Upload cancelled', 'AbortError');
+    }
+
+    const safeName = targetFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const fileRef = ref(storage, `${folder}/${Date.now()}_${safeName}`);
-    await uploadBytes(fileRef, file);
-    return getDownloadURL(fileRef);
+
+    try {
+      const url = await new Promise<string>((resolve, reject) => {
+        const task = uploadBytesResumable(fileRef, targetFile, {
+          contentType: targetFile.type || 'application/octet-stream',
+          cacheControl: 'public,max-age=31536000',
+        });
+
+        let settled = false;
+        let lastTransferred = 0;
+
+        const cleanup = () => {
+          clearInterval(stallCheck);
+          if (signal && onAbort) {
+            signal.removeEventListener('abort', onAbort);
+          }
+        };
+
+        const onAbort = () => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          task.cancel();
+          reject(new DOMException('Upload cancelled', 'AbortError'));
+        };
+
+        if (signal) {
+          signal.addEventListener('abort', onAbort, { once: true });
+        }
+
+        // Fail fast if Storage makes zero byte progress for 7s (e.g. Storage bucket not enabled or CORS blocked)
+        let stalledTicks = 0;
+        const stallCheck = window.setInterval(() => {
+          if (settled) return;
+          const cur = task.snapshot.bytesTransferred;
+          if (cur > lastTransferred) {
+            lastTransferred = cur;
+            stalledTicks = 0;
+          } else {
+            stalledTicks += 1;
+            if (stalledTicks >= 7) {
+              settled = true;
+              cleanup();
+              task.cancel();
+              reject(new Error('STORAGE_STALLED'));
+            }
+          }
+        }, 1000);
+
+        task.on(
+          'state_changed',
+          (snapshot) => {
+            const total = snapshot.totalBytes || targetFile.size || 1;
+            const pct = Math.min(99, Math.round((snapshot.bytesTransferred / total) * 100));
+            onProgress?.({
+              percent: pct,
+              transferredBytes: snapshot.bytesTransferred,
+              totalBytes: total,
+              stage: 'uploading',
+            });
+          },
+          (error) => {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            reject(error);
+          },
+          async () => {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            onProgress?.({
+              percent: 99,
+              transferredBytes: targetFile.size,
+              totalBytes: targetFile.size,
+              stage: 'finalizing',
+            });
+            try {
+              const downloadUrl = await getDownloadURL(task.snapshot.ref);
+              onProgress?.({
+                percent: 100,
+                transferredBytes: targetFile.size,
+                totalBytes: targetFile.size,
+                stage: 'finalizing',
+              });
+              resolve(downloadUrl);
+            } catch (err) {
+              reject(err);
+            }
+          }
+        );
+      });
+
+      return url;
+    } catch (err: any) {
+      if (err?.name === 'AbortError' || err?.code === 'storage/canceled') {
+        throw err;
+      }
+      if (allowDataUrlFallback && file.type.startsWith('image/')) {
+        return compressImageToDataUrl(file, 800);
+      }
+      throw err;
+    }
   };
 
   return (

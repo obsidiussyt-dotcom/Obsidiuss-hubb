@@ -18,6 +18,8 @@ export const db =
 
 export const auth = getAuth(app);
 export const storage = getStorage(app);
+storage.maxUploadRetryTime = 12000;
+storage.maxOperationRetryTime = 8000;
 
 // Safe client-side Google Analytics initialization (skips SSR / unsupported sandboxes)
 export let analytics: ReturnType<typeof getAnalytics> | null = null;

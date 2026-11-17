@@ -29,6 +29,10 @@ import {
   FileDown,
   Activity,
   ExternalLink,
+  Copy,
+  X,
+  Send,
+  ArrowUpDown,
 } from 'lucide-react';
 import { useAuth, ADMIN_EMAIL } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -103,8 +107,10 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     getAllResourceRatings,
     deleteResourceRating,
     reels,
+    createReel,
     deleteReel,
     subscribeChannelMessages,
+    sendChannelMessage,
     deleteChannelMessage,
     uploadFile,
   } = useData();
@@ -112,6 +118,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
   const [activeAdminTab, setActiveAdminTab] = useState<AdminTab>('resources');
   const [confirmDeleteKey, setConfirmDeleteKey] = useState<string | null>(null);
+  const uploadAbortRef = React.useRef<AbortController | null>(null);
 
   // Resource Form State
   const [isAddingResource, setIsAddingResource] = useState(false);
@@ -128,7 +135,14 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   const [resChangelog, setResChangelog] = useState('');
   const [resRequirements, setResRequirements] = useState('');
   const [resTags, setResTags] = useState('');
-  const [uploadingField, setUploadingField] = useState<'package' | 'thumbnail' | 'projectBanner' | null>(null);
+  const [uploadingField, setUploadingField] = useState<'package' | 'thumbnail' | 'projectBanner' | 'reelVideo' | null>(null);
+  const [uploadStats, setUploadStats] = useState<{ percent: number; transferredMB: string; totalMB: string; stage: string }>({
+    percent: 0,
+    transferredMB: '0',
+    totalMB: '0',
+    stage: 'uploading',
+  });
+  const [dragTarget, setDragTarget] = useState<'package' | 'thumbnail' | 'projectBanner' | null>(null);
 
   // Project Form State
   const [isAddingProject, setIsAddingProject] = useState(false);
@@ -163,12 +177,31 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   const [inspectingDiscussionId, setInspectingDiscussionId] = useState<string | null>(null);
   const [inspectedComments, setInspectedComments] = useState<Comment[]>([]);
 
-  // Catalog & Admin Filters
+  // Catalog & Admin Filters + Bulk Operations
   const [resourceSearch, setResourceSearch] = useState('');
+  const [resourceCatFilter, setResourceCatFilter] = useState<string>('all');
+  const [resourceSort, setResourceSort] = useState<'newest' | 'downloads' | 'rating'>('newest');
+  const [selectedResourceIds, setSelectedResourceIds] = useState<Set<string>>(new Set());
+
+  // Reels Tab & Admin Quick-Publish Reel
   const [reelSearch, setReelSearch] = useState('');
   const [reelCatFilter, setReelCatFilter] = useState<string>('All');
+  const [isAddingReel, setIsAddingReel] = useState(false);
+  const [reelTitle, setReelTitle] = useState('');
+  const [reelCategory, setReelCategory] = useState<'Showcase' | 'Minecraft' | 'Android' | 'Devlog' | 'Tutorial'>('Showcase');
+  const [reelVideoUrl, setReelVideoUrl] = useState('');
+  const [reelThumbUrl, setReelThumbUrl] = useState('');
+  const [reelCaption, setReelCaption] = useState('');
+
+  // Live Chat Admin Controls
   const [adminChatChannel, setAdminChatChannel] = useState<ChatChannelId>('general');
   const [adminChatMessages, setAdminChatMessages] = useState<ChatMessage[]>([]);
+  const [adminChatInput, setAdminChatInput] = useState('');
+  const [sendingAdminChat, setSendingAdminChat] = useState(false);
+
+  // Moderation & Inbox Filters
+  const [reportStatusFilter, setReportStatusFilter] = useState<'all' | 'pending' | 'resolved' | 'dismissed'>('all');
+  const [feedbackStatusFilter, setFeedbackStatusFilter] = useState<'all' | 'new' | 'reviewed' | 'resolved'>('all');
 
   // Users Search & Role Filter
   const [userSearch, setUserSearch] = useState('');
@@ -250,38 +283,98 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     );
   }
 
-  // Storage Upload Handler
+  // Fast Resumable Upload Handler (file picker or drag & drop)
+  const uploadTargetFile = async (
+    file: File,
+    target: 'package' | 'thumbnail' | 'projectBanner' | 'reelVideo'
+  ) => {
+    const controller = new AbortController();
+    uploadAbortRef.current = controller;
+    setUploadingField(target);
+    setUploadStats({
+      percent: 2,
+      transferredMB: '0.00',
+      totalMB: (file.size / (1024 * 1024)).toFixed(2),
+      stage: file.type.startsWith('image/') ? 'compressing' : 'uploading',
+    });
+
+    try {
+      const folder =
+        target === 'package' ? 'resources' : target === 'reelVideo' ? 'reels' : 'images';
+
+      if (target === 'package') {
+        const mb = (file.size / (1024 * 1024)).toFixed(2);
+        if (!resFileSize) setResFileSize(`${mb} MB`);
+        if (!resTitle.trim()) {
+          const cleanTitle = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
+          setResTitle(cleanTitle.slice(0, 120));
+        }
+      }
+
+      const url = await uploadFile(file, folder, {
+        signal: controller.signal,
+        allowDataUrlFallback: target === 'thumbnail' || target === 'projectBanner',
+        onProgress: (info) => {
+          setUploadStats({
+            percent: info.percent,
+            transferredMB: (info.transferredBytes / (1024 * 1024)).toFixed(2),
+            totalMB: (info.totalBytes / (1024 * 1024)).toFixed(2),
+            stage: info.stage,
+          });
+        },
+      });
+
+      if (target === 'package') {
+        setResDownloadUrl(url);
+      } else if (target === 'thumbnail') {
+        setResThumbnailUrl(url);
+      } else if (target === 'projectBanner') {
+        setProjBannerUrl(url);
+      } else {
+        setReelVideoUrl(url);
+      }
+
+      if (url.startsWith('data:')) {
+        showToast('Image compressed & attached cleanly!', 'success');
+      } else {
+        showToast('File uploaded to Firebase Storage!', 'success');
+      }
+    } catch (err: any) {
+      if (err?.name === 'AbortError' || err?.code === 'storage/canceled') {
+        showToast('Upload cancelled.', 'info');
+      } else {
+        showToast(
+          'Storage upload unavailable or stalled. Paste a direct GitHub / CDN URL for instant publishing.',
+          'error'
+        );
+      }
+    } finally {
+      uploadAbortRef.current = null;
+      setUploadingField(null);
+      setUploadStats({ percent: 0, transferredMB: '0', totalMB: '0', stage: 'uploading' });
+    }
+  };
+
   const handleStorageUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    target: 'package' | 'thumbnail' | 'projectBanner'
+    target: 'package' | 'thumbnail' | 'projectBanner' | 'reelVideo'
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploadingField(target);
-    try {
-      const folder = target === 'package' ? 'resources' : 'images';
-      const url = await uploadFile(file, folder);
-      if (target === 'package') {
-        setResDownloadUrl(url);
-        if (!resFileSize) {
-          const mb = (file.size / (1024 * 1024)).toFixed(2);
-          setResFileSize(`${mb} MB`);
-        }
-      } else if (target === 'thumbnail') {
-        setResThumbnailUrl(url);
-      } else {
-        setProjBannerUrl(url);
-      }
-      showToast('File uploaded to Firebase Storage!', 'success');
-    } catch {
-      showToast(
-        'Storage upload failed. Ensure Firebase Storage is enabled, or paste a direct URL.',
-        'error'
-      );
-    } finally {
-      setUploadingField(null);
-      e.target.value = '';
-    }
+    await uploadTargetFile(file, target);
+    e.target.value = '';
+  };
+
+  const handleDropUpload = async (
+    e: React.DragEvent,
+    target: 'package' | 'thumbnail' | 'projectBanner'
+  ) => {
+    e.preventDefault();
+    setDragTarget(null);
+    if (uploadingField) return;
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    await uploadTargetFile(file, target);
   };
 
   // Resource Handlers
@@ -317,6 +410,24 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     setResRequirements(r.requirements || '');
     setResTags((r.tags || []).join(', '));
     setIsAddingResource(true);
+  };
+
+  const handleCloneResourceClick = (r: Resource) => {
+    setEditingResourceId(null);
+    setResTitle(r.title);
+    setResDesc(r.description);
+    setResCategory(r.category);
+    setResVersion(`${r.version}-next`);
+    setResDownloadUrl(r.downloadUrl);
+    setResMirrorUrl(r.mirrorUrl || '');
+    setResThumbnailUrl(r.thumbnailUrl || '');
+    setResFileSize(r.fileSize);
+    setResFeatured(r.featured);
+    setResChangelog('');
+    setResRequirements(r.requirements || '');
+    setResTags((r.tags || []).join(', '));
+    setIsAddingResource(true);
+    showToast('Cloned details — update version and download URL to publish!', 'info');
   };
 
   const handleSaveResource = async (e: React.FormEvent) => {
@@ -550,7 +661,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           category: 'minecraft',
           version: '2.4.0',
           downloadUrl: 'https://github.com/obsidiuss/obsidian-client/releases/download/v2.4.0/ObsidianClient-v2.4.0.jar',
-          thumbnailUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80',
+          thumbnailUrl: '',
           fileSize: '18.4 MB',
           featured: true,
           changelog: '- 30% reduction in memory overhead\n- Smooth 240Hz frame pacing\n- Updated keystrokes & ping display',
@@ -565,7 +676,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           category: 'android',
           version: '1.8.2',
           downloadUrl: 'https://github.com/obsidiuss/craftforge-android/releases/download/v1.8.2/CraftForge-v1.8.2.apk',
-          thumbnailUrl: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80',
+          thumbnailUrl: '',
           fileSize: '32.1 MB',
           featured: true,
           changelog: '- Added Vulkan rendering support\n- Low latency touch mapping\n- Battery saver profile',
@@ -583,7 +694,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           description: 'Open-source modular core engineered by Obsidiuss (Bhaskar Yadav) for high-performance client modding, zero-overhead mixins, and low-latency rendering.',
           category: 'Minecraft Client',
           status: 'Active',
-          bannerUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80',
+          bannerUrl: '',
           demoUrl: 'https://youtube.com/@obsidiuss?feature=shared',
           githubUrl: 'https://github.com/obsidiuss',
           downloadUrl: 'https://github.com/obsidiuss',
@@ -634,15 +745,86 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     );
   });
 
-  const filteredAdminResources = resources.filter((r) => {
-    const q = resourceSearch.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      r.title.toLowerCase().includes(q) ||
-      r.category.toLowerCase().includes(q) ||
-      r.version.toLowerCase().includes(q)
-    );
-  });
+  const filteredAdminResources = resources
+    .filter((r) => {
+      if (resourceCatFilter === 'featured' && !r.featured) return false;
+      if (resourceCatFilter !== 'all' && resourceCatFilter !== 'featured' && r.category !== resourceCatFilter) {
+        return false;
+      }
+      const q = resourceSearch.trim().toLowerCase();
+      if (!q) return true;
+      return (
+        r.title.toLowerCase().includes(q) ||
+        r.category.toLowerCase().includes(q) ||
+        r.version.toLowerCase().includes(q)
+      );
+    })
+    .sort((a, b) => {
+      if (resourceSort === 'downloads') return (b.downloadsCount || 0) - (a.downloadsCount || 0);
+      if (resourceSort === 'rating') return (b.rating || 0) - (a.rating || 0);
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+  const handleBulkResourceAction = async (action: 'feature' | 'unfeature' | 'delete') => {
+    const ids = Array.from(selectedResourceIds);
+    if (ids.length === 0) return;
+    try {
+      await Promise.all(
+        ids.map((id) => {
+          if (action === 'delete') return deleteResource(id);
+          return updateResource(id, { featured: action === 'feature' });
+        })
+      );
+      setSelectedResourceIds(new Set());
+      showToast(
+        action === 'delete'
+          ? `Deleted ${ids.length} resources.`
+          : `Updated ${ids.length} resources.`,
+        'success'
+      );
+    } catch {
+      showToast('Some bulk updates failed.', 'error');
+    }
+  };
+
+  const handleAdminPublishReel = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reelTitle.trim() || !reelVideoUrl.trim()) {
+      showToast('Reel title and video URL are required.', 'error');
+      return;
+    }
+    try {
+      await createReel({
+        title: reelTitle.trim(),
+        category: reelCategory,
+        videoUrl: reelVideoUrl.trim(),
+        thumbnailUrl: reelThumbUrl.trim() || undefined,
+        caption: reelCaption.trim() || undefined,
+      });
+      setReelTitle('');
+      setReelVideoUrl('');
+      setReelThumbUrl('');
+      setReelCaption('');
+      setIsAddingReel(false);
+      showToast('Reel published live!', 'success');
+    } catch {
+      showToast('Failed to publish reel.', 'error');
+    }
+  };
+
+  const handleAdminSendChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminChatInput.trim() || sendingAdminChat) return;
+    setSendingAdminChat(true);
+    try {
+      await sendChannelMessage(adminChatChannel, adminChatInput.trim());
+      setAdminChatInput('');
+    } catch {
+      showToast('Failed to send message.', 'error');
+    } finally {
+      setSendingAdminChat(false);
+    }
+  };
 
   const filteredAdminReels = reels.filter((reel) => {
     const matchesCat =
@@ -1021,31 +1203,70 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-semibold text-slate-700">Direct Download URL *</label>
-                    <label className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 cursor-pointer">
-                      <Upload className="w-3 h-3" />
-                      <span>{uploadingField === 'package' ? 'Uploading...' : 'Upload File'}</span>
-                      <input
-                        type="file"
-                        className="hidden"
-                        onChange={(e) => handleStorageUpload(e, 'package')}
-                        disabled={uploadingField !== null}
-                      />
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragTarget('package');
+                  }}
+                  onDragLeave={() => setDragTarget((prev) => (prev === 'package' ? null : prev))}
+                  onDrop={(e) => handleDropUpload(e, 'package')}
+                  className={`p-3 rounded-2xl border transition ${
+                    dragTarget === 'package'
+                      ? 'border-blue-500 bg-blue-50/70'
+                      : 'border-slate-200 bg-slate-50/60'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-slate-700">
+                      Direct Download URL * <span className="text-[10px] font-normal text-slate-400">(or drop file here)</span>
                     </label>
+                    {uploadingField === 'package' ? (
+                      <button
+                        type="button"
+                        onClick={() => uploadAbortRef.current?.abort()}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 hover:text-rose-800"
+                      >
+                        <X className="w-3 h-3" />
+                        <span>Cancel ({uploadStats.percent}%)</span>
+                      </button>
+                    ) : (
+                      <label className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 cursor-pointer">
+                        <Upload className="w-3 h-3" />
+                        <span>Upload File</span>
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={(e) => handleStorageUpload(e, 'package')}
+                          disabled={uploadingField !== null}
+                        />
+                      </label>
+                    )}
                   </div>
                   <input
                     type="url"
                     value={resDownloadUrl}
                     onChange={(e) => setResDownloadUrl(e.target.value)}
-                    placeholder="https://..."
+                    placeholder="https://github.com/.../release.jar or drop file"
                     required
                     className={inputCls}
                   />
+                  {uploadingField === 'package' && (
+                    <div className="mt-2 space-y-1">
+                      <div className="w-full h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                        <div
+                          className="h-full bg-blue-600 transition-all duration-150"
+                          style={{ width: `${Math.max(5, uploadStats.percent)}%` }}
+                        />
+                      </div>
+                      <p className="text-[10px] font-mono text-slate-500">
+                        {uploadStats.percent}% · {uploadStats.transferredMB} / {uploadStats.totalMB} MB
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+
+                <div className="p-3 rounded-2xl border border-slate-200 bg-slate-50/60">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                     Mirror URL (Optional)
                   </label>
                   <input
@@ -1058,28 +1279,81 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 </div>
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-semibold text-slate-700">Thumbnail Image URL</label>
-                  <label className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 cursor-pointer">
-                    <Upload className="w-3 h-3" />
-                    <span>{uploadingField === 'thumbnail' ? 'Uploading...' : 'Upload Image'}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => handleStorageUpload(e, 'thumbnail')}
-                      disabled={uploadingField !== null}
-                    />
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragTarget('thumbnail');
+                }}
+                onDragLeave={() => setDragTarget((prev) => (prev === 'thumbnail' ? null : prev))}
+                onDrop={(e) => handleDropUpload(e, 'thumbnail')}
+                className={`p-3 rounded-2xl border transition ${
+                  dragTarget === 'thumbnail'
+                    ? 'border-blue-500 bg-blue-50/70'
+                    : 'border-slate-200 bg-slate-50/60'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold text-slate-700">
+                    Thumbnail Image URL <span className="text-[10px] font-normal text-slate-400">(auto-compressed fast upload or drop image)</span>
                   </label>
+                  {uploadingField === 'thumbnail' ? (
+                    <button
+                      type="button"
+                      onClick={() => uploadAbortRef.current?.abort()}
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600"
+                    >
+                      <X className="w-3 h-3" />
+                      <span>Cancel ({uploadStats.percent}%)</span>
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      {resThumbnailUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setResThumbnailUrl('')}
+                          className="text-[11px] font-semibold text-rose-600 hover:underline"
+                        >
+                          Clear
+                        </button>
+                      )}
+                      <label className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 cursor-pointer">
+                        <Upload className="w-3 h-3" />
+                        <span>Upload Image</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleStorageUpload(e, 'thumbnail')}
+                          disabled={uploadingField !== null}
+                        />
+                      </label>
+                    </div>
+                  )}
                 </div>
-                <input
-                  type="url"
-                  value={resThumbnailUrl}
-                  onChange={(e) => setResThumbnailUrl(e.target.value)}
-                  placeholder="https://... (optional)"
-                  className={inputCls}
-                />
+                <div className="flex items-center gap-3">
+                  {resThumbnailUrl && (
+                    <img
+                      src={resThumbnailUrl}
+                      alt="Preview"
+                      className="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0"
+                    />
+                  )}
+                  <input
+                    type="text"
+                    value={resThumbnailUrl}
+                    onChange={(e) => setResThumbnailUrl(e.target.value)}
+                    placeholder="https://... or upload/drop image"
+                    className={inputCls}
+                  />
+                </div>
+                {uploadingField === 'thumbnail' && (
+                  <div className="mt-2 w-full h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                    <div
+                      className="h-full bg-blue-600 transition-all duration-150"
+                      style={{ width: `${Math.max(8, uploadStats.percent)}%` }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div>
@@ -1150,16 +1424,114 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
             </form>
           )}
 
+          {/* Resource Filter Bar & Bulk Selection Actions */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+              {[
+                { id: 'all', label: 'All' },
+                { id: 'featured', label: 'Featured' },
+                { id: 'minecraft', label: 'Minecraft' },
+                { id: 'android', label: 'Android' },
+                { id: 'pc-software', label: 'PC Software' },
+                { id: 'source-code', label: 'Source Code' },
+                { id: 'dev-tools', label: 'Dev Tools' },
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setResourceCatFilter(cat.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                    resourceCatFilter === cat.id
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'bg-white text-slate-600 hover:text-slate-950 border border-slate-200'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <ArrowUpDown className="w-3.5 h-3.5 text-blue-600" />
+              <select
+                value={resourceSort}
+                onChange={(e) => setResourceSort(e.target.value as 'newest' | 'downloads' | 'rating')}
+                className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-blue-500"
+              >
+                <option value="newest">Newest</option>
+                <option value="downloads">Most Downloaded</option>
+                <option value="rating">Highest Rated</option>
+              </select>
+            </div>
+          </div>
+
+          {selectedResourceIds.size > 0 && (
+            <div className="p-3 rounded-2xl bg-blue-50 border border-blue-200 flex flex-wrap items-center justify-between gap-3">
+              <span className="text-xs font-bold text-blue-800">
+                {selectedResourceIds.size} selected
+              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => handleBulkResourceAction('feature')}
+                  className="px-3 py-1.5 rounded-lg bg-white border border-blue-200 text-xs font-bold text-blue-700 hover:bg-blue-100 transition"
+                >
+                  Feature
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleBulkResourceAction('unfeature')}
+                  className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
+                >
+                  Unfeature
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleBulkResourceAction('delete')}
+                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition"
+                >
+                  Delete Selected
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedResourceIds(new Set())}
+                  className="px-2.5 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="rounded-3xl glass-panel overflow-hidden">
-            {resources.length === 0 ? (
+            {filteredAdminResources.length === 0 ? (
               <div className="p-10 text-center text-xs text-slate-500">
-                No resources published yet. Click "Publish Resource" to add your first release.
+                {resources.length === 0
+                  ? 'No resources published yet. Click "Publish Resource" to add your first release.'
+                  : 'No resources match your current filter.'}
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                     <tr>
+                      <th className="p-4 w-8">
+                        <input
+                          type="checkbox"
+                          checked={
+                            filteredAdminResources.length > 0 &&
+                            filteredAdminResources.every((r) => selectedResourceIds.has(r.id))
+                          }
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedResourceIds(new Set(filteredAdminResources.map((r) => r.id)));
+                            } else {
+                              setSelectedResourceIds(new Set());
+                            }
+                          }}
+                          className="rounded border-slate-300 text-blue-600"
+                        />
+                      </th>
                       <th className="p-4">Resource</th>
                       <th className="p-4">Category</th>
                       <th className="p-4">Version</th>
@@ -1170,6 +1542,21 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                   <tbody className="divide-y divide-slate-200">
                     {filteredAdminResources.map((r) => (
                       <tr key={r.id} className="hover:bg-slate-50/70 transition">
+                        <td className="p-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedResourceIds.has(r.id)}
+                            onChange={(e) => {
+                              setSelectedResourceIds((prev) => {
+                                const next = new Set(prev);
+                                if (e.target.checked) next.add(r.id);
+                                else next.delete(r.id);
+                                return next;
+                              });
+                            }}
+                            className="rounded border-slate-300 text-blue-600"
+                          />
+                        </td>
                         <td className="p-4 flex items-center gap-3">
                           {r.thumbnailUrl ? (
                             <img src={r.thumbnailUrl} alt="" className="w-10 h-10 rounded-lg object-cover" />
@@ -1187,7 +1574,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                           {r.category}
                         </td>
                         <td className="p-4 font-mono text-slate-700">{r.version}</td>
-                        <td className="p-4 font-mono font-bold text-slate-900">
+                        <td className="p-4 font-mono font-bold text-slate-900 tabular-nums">
                           {(r.downloadsCount || 0).toLocaleString()}
                         </td>
                         <td className="p-4 text-right">
@@ -1202,6 +1589,13 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                               title={r.featured ? 'Remove from featured' : 'Feature on homepage'}
                             >
                               <Star className={`w-3.5 h-3.5 ${r.featured ? 'fill-current' : ''}`} />
+                            </button>
+                            <button
+                              onClick={() => handleCloneResourceClick(r)}
+                              className="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:text-blue-700 hover:bg-blue-50"
+                              title="Clone / Publish New Version"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleEditResourceClick(r)}
@@ -1315,28 +1709,70 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-semibold text-slate-700">Banner Image URL</label>
-                    <label className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 cursor-pointer">
-                      <Upload className="w-3 h-3" />
-                      <span>{uploadingField === 'projectBanner' ? 'Uploading...' : 'Upload'}</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => handleStorageUpload(e, 'projectBanner')}
-                        disabled={uploadingField !== null}
-                      />
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragTarget('projectBanner');
+                  }}
+                  onDragLeave={() => setDragTarget((prev) => (prev === 'projectBanner' ? null : prev))}
+                  onDrop={(e) => handleDropUpload(e, 'projectBanner')}
+                  className={`p-3 rounded-2xl border transition ${
+                    dragTarget === 'projectBanner'
+                      ? 'border-blue-500 bg-blue-50/70'
+                      : 'border-slate-200 bg-slate-50/60'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-slate-700">
+                      Banner Image URL <span className="text-[10px] font-normal text-slate-400">(auto-compressed)</span>
                     </label>
+                    {uploadingField === 'projectBanner' ? (
+                      <button
+                        type="button"
+                        onClick={() => uploadAbortRef.current?.abort()}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600"
+                      >
+                        <X className="w-3 h-3" />
+                        <span>Cancel ({uploadStats.percent}%)</span>
+                      </button>
+                    ) : (
+                      <label className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 cursor-pointer">
+                        <Upload className="w-3 h-3" />
+                        <span>Upload</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleStorageUpload(e, 'projectBanner')}
+                          disabled={uploadingField !== null}
+                        />
+                      </label>
+                    )}
                   </div>
-                  <input
-                    type="url"
-                    value={projBannerUrl}
-                    onChange={(e) => setProjBannerUrl(e.target.value)}
-                    placeholder="https://..."
-                    className={inputCls}
-                  />
+                  <div className="flex items-center gap-2.5">
+                    {projBannerUrl && (
+                      <img
+                        src={projBannerUrl}
+                        alt="Preview"
+                        className="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0"
+                      />
+                    )}
+                    <input
+                      type="text"
+                      value={projBannerUrl}
+                      onChange={(e) => setProjBannerUrl(e.target.value)}
+                      placeholder="https://... or upload/drop image"
+                      className={inputCls}
+                    />
+                  </div>
+                  {uploadingField === 'projectBanner' && (
+                    <div className="mt-2 w-full h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                      <div
+                        className="h-full bg-blue-600 transition-all duration-150"
+                        style={{ width: `${Math.max(8, uploadStats.percent)}%` }}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">Tech Tags (comma separated)</label>
@@ -1489,14 +1925,146 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setCurrentTab('reels')}
+                onClick={() => setIsAddingReel(!isAddingReel)}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{isAddingReel ? 'Close Form' : 'Publish Reel'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentTab('reels')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold transition"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span>Open Reels Studio</span>
               </button>
             </div>
           </div>
+
+          {isAddingReel && (
+            <form
+              onSubmit={handleAdminPublishReel}
+              className="p-5 rounded-2xl glass-panel border-blue-200 space-y-4 animate-modal-pop"
+            >
+              <h3 className="text-sm font-bold text-blue-700">Quick Publish Reel</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Title *</label>
+                  <input
+                    type="text"
+                    value={reelTitle}
+                    onChange={(e) => setReelTitle(e.target.value)}
+                    placeholder="e.g. Client HUD Showcase"
+                    maxLength={120}
+                    required
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Category</label>
+                  <select
+                    value={reelCategory}
+                    onChange={(e) => setReelCategory(e.target.value as any)}
+                    className={inputCls}
+                  >
+                    <option value="Showcase">Showcase</option>
+                    <option value="Minecraft">Minecraft</option>
+                    <option value="Android">Android</option>
+                    <option value="Devlog">Devlog</option>
+                    <option value="Tutorial">Tutorial</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-semibold text-slate-700">Video URL / YouTube Short *</label>
+                    {uploadingField === 'reelVideo' ? (
+                      <button
+                        type="button"
+                        onClick={() => uploadAbortRef.current?.abort()}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600"
+                      >
+                        <X className="w-3 h-3" />
+                        <span>Cancel ({uploadStats.percent}%)</span>
+                      </button>
+                    ) : (
+                      <label className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 cursor-pointer">
+                        <Upload className="w-3 h-3" />
+                        <span>Upload Video</span>
+                        <input
+                          type="file"
+                          accept="video/mp4,video/webm,video/quicktime"
+                          className="hidden"
+                          onChange={(e) => handleStorageUpload(e, 'reelVideo')}
+                          disabled={uploadingField !== null}
+                        />
+                      </label>
+                    )}
+                  </div>
+                  <input
+                    type="url"
+                    value={reelVideoUrl}
+                    onChange={(e) => setReelVideoUrl(e.target.value)}
+                    placeholder="https://youtube.com/shorts/... or .mp4"
+                    maxLength={1500}
+                    required
+                    className={inputCls}
+                  />
+                  {uploadingField === 'reelVideo' && (
+                    <div className="mt-1.5 w-full h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                      <div
+                        className="h-full bg-blue-600 transition-all duration-150"
+                        style={{ width: `${Math.max(5, uploadStats.percent)}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Poster Thumbnail URL (Optional)</label>
+                  <input
+                    type="url"
+                    value={reelThumbUrl}
+                    onChange={(e) => setReelThumbUrl(e.target.value)}
+                    placeholder="https://..."
+                    maxLength={1500}
+                    className={inputCls}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Caption (Optional)</label>
+                <input
+                  type="text"
+                  value={reelCaption}
+                  onChange={(e) => setReelCaption(e.target.value)}
+                  maxLength={500}
+                  placeholder="Short description..."
+                  className={inputCls}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddingReel(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-900"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={uploadingField !== null}
+                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition disabled:opacity-50"
+                >
+                  Publish Reel
+                </button>
+              </div>
+            </form>
+          )}
 
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
             {['All', 'Showcase', 'Minecraft', 'Android', 'Devlog', 'Tutorial'].map((cat) => (
@@ -1646,6 +2214,28 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 ))}
               </div>
             )}
+
+            <form
+              onSubmit={handleAdminSendChat}
+              className="p-3 bg-slate-50 border-t border-slate-200 flex items-center gap-2"
+            >
+              <input
+                type="text"
+                value={adminChatInput}
+                onChange={(e) => setAdminChatInput(e.target.value)}
+                placeholder={`Post to #${adminChatChannel} as ${profile?.displayName || 'Creator'}...`}
+                maxLength={1000}
+                className="flex-1 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500"
+              />
+              <button
+                type="submit"
+                disabled={!adminChatInput.trim() || sendingAdminChat}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition disabled:opacity-40"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>Send</span>
+              </button>
+            </form>
           </div>
         </div>
       )}
@@ -2039,15 +2629,35 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       {activeAdminTab === 'moderation' && (
         <div className="space-y-8">
           <div className="space-y-3">
-            <h2 className="font-display text-lg font-bold text-slate-950">
-              Reported Content Queue ({reportsList.length})
-            </h2>
-            {reportsList.length === 0 ? (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h2 className="font-display text-lg font-bold text-slate-950">
+                Reported Content Queue ({reportsList.length})
+              </h2>
+              <div className="flex items-center gap-1.5 overflow-x-auto">
+                {(['all', 'pending', 'resolved', 'dismissed'] as const).map((st) => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => setReportStatusFilter(st)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition whitespace-nowrap ${
+                      reportStatusFilter === st
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'bg-white text-slate-600 hover:text-slate-950 border border-slate-200'
+                    }`}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {reportsList.filter((r) => reportStatusFilter === 'all' || r.status === reportStatusFilter).length === 0 ? (
               <div className="p-8 text-center rounded-2xl glass-panel text-xs text-slate-500">
-                No user reports submitted.
+                No reports match this status.
               </div>
             ) : (
-              reportsList.map((rep) => {
+              reportsList
+                .filter((r) => reportStatusFilter === 'all' || r.status === reportStatusFilter)
+                .map((rep) => {
                 const isReviewReport = rep.targetType === 'review' && rep.targetId.includes(':');
                 const [repResId, repUserId] = isReviewReport ? rep.targetId.split(':') : ['', ''];
                 return (
@@ -2291,15 +2901,35 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       {/* TAB 6: FEEDBACK INBOX */}
       {activeAdminTab === 'feedback' && (
         <div className="space-y-4">
-          <h2 className="font-display text-lg font-bold text-slate-950">
-            Contact &amp; Feedback Inbox ({feedbackList.length})
-          </h2>
-          {feedbackList.length === 0 ? (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <h2 className="font-display text-lg font-bold text-slate-950">
+              Contact &amp; Feedback Inbox ({feedbackList.length})
+            </h2>
+            <div className="flex items-center gap-1.5 overflow-x-auto">
+              {(['all', 'new', 'reviewed', 'resolved'] as const).map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => setFeedbackStatusFilter(st)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition whitespace-nowrap ${
+                    feedbackStatusFilter === st
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'bg-white text-slate-600 hover:text-slate-950 border border-slate-200'
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
+          </div>
+          {feedbackList.filter((fb) => feedbackStatusFilter === 'all' || fb.status === feedbackStatusFilter).length === 0 ? (
             <div className="p-10 text-center rounded-3xl glass-panel text-xs text-slate-500">
-              No contact messages received yet.
+              No messages match this status filter.
             </div>
           ) : (
-            feedbackList.map((fb) => (
+            feedbackList
+              .filter((fb) => feedbackStatusFilter === 'all' || fb.status === feedbackStatusFilter)
+              .map((fb) => (
               <div
                 key={fb.id}
                 className="p-5 rounded-2xl glass-panel flex flex-col sm:flex-row sm:items-start justify-between gap-4"
@@ -2328,7 +2958,18 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(fb.email);
+                      showToast(`Copied ${fb.email}`, 'info');
+                    }}
+                    className="p-1.5 rounded-lg bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-700 transition"
+                    title="Copy email"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
                   {fb.id && (
                     <>
                       <button
@@ -2512,7 +3153,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                     <div key={r.id} className="space-y-1">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-semibold text-slate-950">{r.title}</span>
-                        <span className="font-mono font-semibold text-blue-600">
+                        <span className="font-mono font-semibold text-blue-600 tabular-nums">
                           {(r.downloadsCount || 0).toLocaleString()} downloads
                         </span>
                       </div>
@@ -2527,6 +3168,72 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 })}
               </div>
             )}
+          </div>
+
+          {/* Category Breakdown & Top Starred Projects */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="p-6 rounded-3xl glass-panel space-y-4">
+              <h3 className="font-display text-sm font-bold text-slate-950">
+                Downloads by Category
+              </h3>
+              {resources.length === 0 ? (
+                <p className="text-xs text-slate-500">No resource data yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {Object.entries(
+                    resources.reduce<Record<string, { count: number; downloads: number }>>((acc, r) => {
+                      const k = r.category || 'other';
+                      if (!acc[k]) acc[k] = { count: 0, downloads: 0 };
+                      acc[k].count += 1;
+                      acc[k].downloads += r.downloadsCount || 0;
+                      return acc;
+                    }, {})
+                  )
+                    .sort((a, b) => b[1].downloads - a[1].downloads)
+                    .map(([cat, stat]) => (
+                      <div
+                        key={cat}
+                        className="flex items-center justify-between text-xs py-2 border-b border-slate-100 last:border-b-0"
+                      >
+                        <span className="font-bold uppercase text-slate-800">{cat}</span>
+                        <span className="font-mono text-slate-600 tabular-nums">
+                          {stat.count} builds · <strong className="text-blue-600">{stat.downloads.toLocaleString()}</strong> dl
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 rounded-3xl glass-panel space-y-4">
+              <h3 className="font-display text-sm font-bold text-slate-950">
+                Top Starred Projects
+              </h3>
+              {projects.length === 0 ? (
+                <p className="text-xs text-slate-500">No projects published yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {[...projects]
+                    .sort((a, b) => (b.stars || 0) - (a.stars || 0))
+                    .slice(0, 5)
+                    .map((p) => (
+                      <div
+                        key={p.id}
+                        className="flex items-center justify-between text-xs py-2 border-b border-slate-100 last:border-b-0"
+                      >
+                        <div className="min-w-0 pr-3">
+                          <p className="font-bold text-slate-900 truncate">{p.title}</p>
+                          <p className="text-[11px] text-slate-500">{p.category} · {p.status}</p>
+                        </div>
+                        <span className="inline-flex items-center gap-1 font-mono font-bold text-orange-600 tabular-nums shrink-0">
+                          <Star className="w-3.5 h-3.5 fill-current" />
+                          {p.stars || 0}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

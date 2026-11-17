@@ -21,13 +21,13 @@ import {
   Heart,
   Eye,
   Play,
+  Shield,
+  Package,
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { Resource } from '../types';
 import type { NavigateOptions } from '../App';
-
-import devWorkspaceImg from '../assets/images/portfolio_dev_workspace_1794658366383.jpg';
 
 interface HomeViewProps {
   setCurrentTab: (tab: string) => void;
@@ -180,31 +180,108 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </div>
             </div>
 
-            {/* Right Column: Visual Studio Card */}
+            {/* Right Column: Live Hub Spotlight (Real Firestore Data, Zero Fake Images) */}
             <div className="lg:col-span-5 relative">
-              <div className="relative rounded-3xl overflow-hidden bg-white border border-slate-200 shadow-2xl shadow-blue-950/10 p-2 group">
-                <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-slate-900">
-                  <img
-                    src={devWorkspaceImg}
-                    alt="Obsidiuss Workspace by Bhaskar Yadav"
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
-
-                  <div className="absolute bottom-3 left-3 right-3 p-3.5 rounded-xl bg-white/95 backdrop-blur-md border border-white text-left shadow-lg">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-xs font-extrabold text-slate-950 tracking-tight">
-                        Bhaskar Yadav · Obsidiuss
-                      </span>
-                      <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-blue-600">
-                        Owner
-                      </span>
-                    </div>
-                    <p className="text-[11px] font-mono text-slate-500">
+              <div className="rounded-3xl bg-white border border-slate-200 shadow-xl shadow-blue-950/5 p-5 sm:p-6 space-y-4">
+                <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-950 truncate">
+                      Bhaskar Yadav · Obsidiuss
+                    </p>
+                    <p className="text-[11px] text-slate-500 font-mono">
                       Minecraft · Android · PC Tools · Open Source
                     </p>
                   </div>
+                  {isAdmin ? (
+                    <button
+                      type="button"
+                      onClick={() => navigate('admin')}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold transition shrink-0"
+                    >
+                      <Shield className="w-3.5 h-3.5" />
+                      <span>Admin</span>
+                    </button>
+                  ) : (
+                    <span className="text-[11px] font-mono font-bold text-blue-600 shrink-0">
+                      Creator Hub
+                    </span>
+                  )}
+                </div>
+
+                {/* Latest Release Spotlight */}
+                {(() => {
+                  const spotlightRes =
+                    resources.find((r) => r.featured) || resources[0];
+                  if (!spotlightRes) {
+                    return (
+                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+                        <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                          <Package className="w-4 h-4 text-blue-600" />
+                          <span>Verified Releases Ready</span>
+                        </div>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          Software packages, client builds, and source drops published by Obsidiuss appear here automatically.
+                        </p>
+                      </div>
+                    );
+                  }
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => onSelectResource(spotlightRes)}
+                      className="w-full p-4 rounded-2xl bg-blue-50/50 hover:bg-blue-50 border border-blue-200/80 text-left transition group space-y-2"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">
+                          Latest Release · {spotlightRes.version}
+                        </span>
+                        <ArrowUpRight className="w-4 h-4 text-blue-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                      </div>
+                      <p className="text-sm font-bold text-slate-950 truncate group-hover:text-blue-700 transition">
+                        {spotlightRes.title}
+                      </p>
+                      <div className="flex items-center gap-3 text-[11px] font-mono text-slate-500 tabular-nums">
+                        <span>{spotlightRes.category}</span>
+                        <span>·</span>
+                        <span>{spotlightRes.fileSize || 'Package'}</span>
+                        <span>·</span>
+                        <span className="text-blue-600 font-semibold">
+                          {(spotlightRes.downloadsCount || 0).toLocaleString()} dl
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })()}
+
+                {/* Quick Hub Shortcuts */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => navigate('announcements')}
+                    className="p-3 rounded-xl bg-slate-50 hover:bg-white border border-slate-200/80 hover:border-blue-200 text-left transition"
+                  >
+                    <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 mb-1">
+                      <span>Devlogs</span>
+                      <Bell className="w-3.5 h-3.5 text-blue-600" />
+                    </div>
+                    <p className="text-xs font-bold text-slate-900 truncate">
+                      {latestAnnouncement ? latestAnnouncement.title : `${announcements.length} Updates`}
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate('chat')}
+                    className="p-3 rounded-xl bg-slate-50 hover:bg-white border border-slate-200/80 hover:border-blue-200 text-left transition"
+                  >
+                    <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 mb-1">
+                      <span>Community</span>
+                      <MessageSquare className="w-3.5 h-3.5 text-blue-600" />
+                    </div>
+                    <p className="text-xs font-bold text-slate-900 truncate">
+                      Live Chat &amp; DMs
+                    </p>
+                  </button>
                 </div>
               </div>
             </div>

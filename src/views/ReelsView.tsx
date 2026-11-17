@@ -116,9 +116,11 @@ export const ReelsView: React.FC<ReelsViewProps> = ({
   const [videoUrl, setVideoUrl] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [submittingReel, setSubmittingReel] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const uploadAbortRef = useRef<AbortController | null>(null);
   const viewedIdsRef = useRef<Set<string>>(new Set());
   const touchStartYRef = useRef<number | null>(null);
   const lastTapRef = useRef<number>(0);
@@ -300,15 +302,30 @@ export const ReelsView: React.FC<ReelsViewProps> = ({
       showToast('Video file must be under 60 MB, or paste a direct/YouTube Shorts link.', 'error');
       return;
     }
+    const controller = new AbortController();
+    uploadAbortRef.current = controller;
     setUploadingVideo(true);
+    setUploadProgress(2);
     try {
-      const url = await uploadFile(file, 'reels');
+      const url = await uploadFile(file, 'reels', {
+        signal: controller.signal,
+        onProgress: (info) => setUploadProgress(info.percent),
+      });
       setVideoUrl(url);
       showToast('Video uploaded successfully.', 'success');
-    } catch {
-      showToast('Storage upload failed. Paste a direct MP4 or YouTube Shorts link instead.', 'error');
+    } catch (err: any) {
+      if (err?.name === 'AbortError' || err?.code === 'storage/canceled') {
+        showToast('Upload cancelled.', 'info');
+      } else {
+        showToast(
+          'Storage upload unavailable or stalled. Paste a YouTube Shorts or direct MP4 URL instead.',
+          'error'
+        );
+      }
     } finally {
+      uploadAbortRef.current = null;
       setUploadingVideo(false);
+      setUploadProgress(0);
       e.target.value = '';
     }
   };
@@ -1208,18 +1225,38 @@ export const ReelsView: React.FC<ReelsViewProps> = ({
                     required
                     className="flex-1 min-h-[42px] px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-blue-500"
                   />
-                  <label className="min-h-[42px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-xs font-bold text-blue-700 cursor-pointer shrink-0 transition">
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>{uploadingVideo ? 'Uploading...' : 'Upload'}</span>
-                    <input
-                      type="file"
-                      accept="video/mp4,video/webm,video/quicktime"
-                      onChange={handleVideoFileUpload}
-                      disabled={uploadingVideo}
-                      className="hidden"
-                    />
-                  </label>
+                  {uploadingVideo ? (
+                    <button
+                      type="button"
+                      onClick={() => uploadAbortRef.current?.abort()}
+                      className="min-h-[42px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-xs font-bold text-rose-700 shrink-0 transition"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>Cancel ({uploadProgress}%)</span>
+                    </button>
+                  ) : (
+                    <label className="min-h-[42px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-xs font-bold text-blue-700 cursor-pointer shrink-0 transition">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Upload</span>
+                      <input
+                        type="file"
+                        accept="video/mp4,video/webm,video/quicktime"
+                        onChange={handleVideoFileUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
                 </div>
+                {uploadingVideo && (
+                  <div className="mt-2 space-y-1">
+                    <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                      <div
+                        className="h-full bg-blue-600 transition-all duration-200"
+                        style={{ width: `${Math.max(4, uploadProgress)}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>

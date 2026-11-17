@@ -143,6 +143,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      setLoading(false);
+
       if (currentUser) {
         const isMainAdmin =
           currentUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
@@ -221,7 +223,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setProfile(null);
         setHasAdminDoc(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();

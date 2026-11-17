@@ -44,8 +44,6 @@ const CHANNELS: { id: ChatChannelId; label: string; topic: string }[] = [
   { id: 'help-desk', label: 'help-desk', topic: 'Quick installation troubleshooting and setup support' },
 ];
 
-const QUICK_EMOJIS = ['🔥', '🚀', '⚡', '💎', '❤️', '👏', '🎮', '💯'];
-
 export const ChatView: React.FC<ChatViewProps> = ({
   initialMode = 'chat',
   initialDmThreadId = null,
@@ -100,10 +98,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
   }, [mode, activeThreadId, dmThreads]);
 
   useEffect(() => {
-    if (mode !== 'chat') return;
+    if (mode !== 'chat' || !user) {
+      setChannelMessages([]);
+      return;
+    }
     const unsub = subscribeChannelMessages(activeChannel, setChannelMessages);
     return () => unsub();
-  }, [mode, activeChannel, subscribeChannelMessages]);
+  }, [mode, activeChannel, user, subscribeChannelMessages]);
 
   useEffect(() => {
     if (mode !== 'dms' || !activeThreadId || !user) {
@@ -259,7 +260,33 @@ export const ChatView: React.FC<ChatViewProps> = ({
         </div>
       </div>
 
-      {/* Main Split Messaging Container */}
+      {/* Guest Gate: Can browse website, must sign in to chat or send DMs */}
+      {!user ? (
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-8 sm:p-12 text-center space-y-5">
+          <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center mx-auto">
+            <Lock className="w-6 h-6" />
+          </div>
+          <div className="space-y-1.5 max-w-md mx-auto">
+            <h2 className="font-display text-xl font-black text-slate-950">
+              Sign In to Chat &amp; Message
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              You can browse projects, announcements, and releases freely. Create a free account or
+              sign in with Google or Email OTP to join live channels and private DMs.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+            <button
+              type="button"
+              onClick={openAuth}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-blue-600/20 transition"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>Sign In to Unlock Chat</span>
+            </button>
+          </div>
+        </div>
+      ) : (
       <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden grid grid-cols-1 lg:grid-cols-12 lg:min-h-[640px]">
         {/* Left Navigation Column */}
         <aside className="lg:col-span-4 xl:col-span-3 border-b lg:border-b-0 lg:border-r border-slate-200 p-3 sm:p-4 flex flex-col justify-between gap-3 sm:gap-6 bg-slate-50/70">
@@ -715,21 +742,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   </div>
                 )}
 
-                {/* Quick Emoji Reaction Strip */}
-                <div className="flex items-center gap-1.5 pb-1 overflow-x-auto">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 pr-1">Quick:</span>
-                  {QUICK_EMOJIS.map((emoji) => (
-                    <button
-                      key={emoji}
-                      type="button"
-                      onClick={() => setComposerText((prev) => prev + emoji)}
-                      className="px-2 py-1 rounded-lg bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-xs transition active:scale-95 shadow-2xs"
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-
                 <div className="flex items-center gap-2.5">
                   <input
                     type="text"
@@ -757,6 +769,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           </div>
         </section>
       </div>
+      )}
 
       {/* Member Directory / New DM Modal */}
       {isNewDMOpen && (

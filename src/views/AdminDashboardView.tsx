@@ -23,11 +23,19 @@ import {
   RefreshCw,
   Film,
   Sparkles,
+  MessageSquare,
+  Hash,
+  Search,
+  FileDown,
+  Activity,
+  ExternalLink,
 } from 'lucide-react';
 import { useAuth, ADMIN_EMAIL } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
 import {
+  ChatChannelId,
+  ChatMessage,
   Resource,
   ResourceRating,
   Project,
@@ -47,6 +55,8 @@ interface AdminDashboardViewProps {
 type AdminTab =
   | 'resources'
   | 'projects'
+  | 'reels'
+  | 'chat'
   | 'announcements'
   | 'categories'
   | 'reviews'
@@ -94,6 +104,8 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     deleteResourceRating,
     reels,
     deleteReel,
+    subscribeChannelMessages,
+    deleteChannelMessage,
     uploadFile,
   } = useData();
   const { showToast } = useToast();
@@ -151,8 +163,16 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   const [inspectingDiscussionId, setInspectingDiscussionId] = useState<string | null>(null);
   const [inspectedComments, setInspectedComments] = useState<Comment[]>([]);
 
-  // Users Search
+  // Catalog & Admin Filters
+  const [resourceSearch, setResourceSearch] = useState('');
+  const [reelSearch, setReelSearch] = useState('');
+  const [reelCatFilter, setReelCatFilter] = useState<string>('All');
+  const [adminChatChannel, setAdminChatChannel] = useState<ChatChannelId>('general');
+  const [adminChatMessages, setAdminChatMessages] = useState<ChatMessage[]>([]);
+
+  // Users Search & Role Filter
   const [userSearch, setUserSearch] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState<string>('all');
 
   // Reviews Moderation State
   const [allReviews, setAllReviews] = useState<(ResourceRating & { resourceTitle: string })[]>([]);
@@ -186,6 +206,15 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     const unsub = getCommentsForDiscussion(inspectingDiscussionId, setInspectedComments);
     return () => unsub();
   }, [inspectingDiscussionId, getCommentsForDiscussion]);
+
+  React.useEffect(() => {
+    if (activeAdminTab !== 'chat') {
+      setAdminChatMessages([]);
+      return;
+    }
+    const unsub = subscribeChannelMessages(adminChatChannel, setAdminChatMessages);
+    return () => unsub();
+  }, [activeAdminTab, adminChatChannel, subscribeChannelMessages]);
 
   const isAuthorized = isAdmin && user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
@@ -594,6 +623,9 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
   const filteredUsers = usersList.filter((u) => {
     const q = userSearch.trim().toLowerCase();
+    const matchesRole =
+      userRoleFilter === 'all' || (u.role || 'Member').toLowerCase() === userRoleFilter.toLowerCase();
+    if (!matchesRole) return false;
     if (!q) return true;
     return (
       u.displayName?.toLowerCase().includes(q) ||
@@ -601,6 +633,86 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       u.role?.toLowerCase().includes(q)
     );
   });
+
+  const filteredAdminResources = resources.filter((r) => {
+    const q = resourceSearch.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      r.title.toLowerCase().includes(q) ||
+      r.category.toLowerCase().includes(q) ||
+      r.version.toLowerCase().includes(q)
+    );
+  });
+
+  const filteredAdminReels = reels.filter((reel) => {
+    const matchesCat =
+      reelCatFilter === 'All' || reel.category.toLowerCase() === reelCatFilter.toLowerCase();
+    if (!matchesCat) return false;
+    const q = reelSearch.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      reel.title.toLowerCase().includes(q) ||
+      reel.authorName.toLowerCase().includes(q) ||
+      (reel.caption || '').toLowerCase().includes(q)
+    );
+  });
+
+  const exportUsersCsv = () => {
+    const rows = [
+      ['UID', 'DisplayName', 'Email', 'Role', 'Downloads', 'JoinedAt'].join(','),
+      ...usersList.map((u) =>
+        [
+          u.uid,
+          `"${(u.displayName || '').replace(/"/g, '""')}"`,
+          `"${(u.email || '').replace(/"/g, '""')}"`,
+          u.role || 'Member',
+          String(u.downloadsCount || 0),
+          u.joinedAt || '',
+        ].join(',')
+      ),
+    ];
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `obsidiuss-users-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Exported member directory CSV.', 'success');
+  };
+
+  const exportAnalyticsJson = () => {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      totals: {
+        siteVisits,
+        totalDownloads,
+        resources: resources.length,
+        projects: projects.length,
+        reels: reels.length,
+        discussions: discussions.length,
+        registeredUsers: usersList.length,
+        pendingReports: pendingReportsCount,
+        newFeedback: newFeedbackCount,
+      },
+      topResources: topResources.map((r) => ({
+        id: r.id,
+        title: r.title,
+        category: r.category,
+        version: r.version,
+        downloadsCount: r.downloadsCount || 0,
+        rating: r.rating || 0,
+      })),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `obsidiuss-analytics-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Exported hub analytics report JSON.', 'success');
+  };
 
   const renderDeleteButton = (key: string, onConfirm: () => Promise<void> | void) => {
     if (confirmDeleteKey === key) {
@@ -644,18 +756,19 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 animate-fade-up">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-3xl glass-panel border-orange-200 bg-gradient-to-r from-white via-orange-50/40 to-blue-50/40">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl glass-panel border-blue-200/80 bg-gradient-to-r from-white via-blue-50/40 to-white">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-orange-50 text-orange-600 border border-orange-200 flex items-center justify-center shrink-0 shadow-sm">
+          <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-600/20">
             <Shield className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-display text-xl sm:text-2xl font-extrabold text-slate-950">
-                OBSIDIUSS Admin Panel
+              <h1 className="font-display text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
+                OBSIDIUSS Admin Control
               </h1>
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700 border border-orange-200">
-                Verified Admin
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
+                <CheckCircle2 className="w-3 h-3" />
+                <span>Creator Access</span>
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -664,36 +777,112 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           </div>
         </div>
 
-        {resources.length === 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          {resources.length === 0 && (
+            <button
+              type="button"
+              onClick={handleSeedStarterData}
+              disabled={seeding}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition shrink-0 disabled:opacity-50"
+            >
+              <Sparkles className={`w-3.5 h-3.5 ${seeding ? 'animate-spin' : ''}`} />
+              <span>{seeding ? 'Seeding...' : 'Seed Starter Content'}</span>
+            </button>
+          )}
           <button
             type="button"
-            onClick={handleSeedStarterData}
-            disabled={seeding}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-md shadow-blue-600/20 transition shrink-0 disabled:opacity-50"
+            onClick={exportAnalyticsJson}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-200 text-slate-700 hover:text-blue-700 text-xs font-bold transition shrink-0"
           >
-            <Sparkles className={`w-3.5 h-3.5 ${seeding ? 'animate-spin' : ''}`} />
-            <span>{seeding ? 'Seeding Content...' : 'Seed Starter Content'}</span>
+            <FileDown className="w-3.5 h-3.5" />
+            <span>Export Report</span>
           </button>
-        )}
+        </div>
+      </div>
+
+      {/* Live Overview KPI Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {[
+          {
+            label: 'Site Visits',
+            value: siteVisits.toLocaleString(),
+            icon: Activity,
+            tab: 'analytics' as AdminTab,
+          },
+          {
+            label: 'Downloads',
+            value: totalDownloads.toLocaleString(),
+            icon: Download,
+            tab: 'resources' as AdminTab,
+          },
+          {
+            label: 'Members',
+            value: usersList.length.toLocaleString(),
+            icon: Users,
+            tab: 'users' as AdminTab,
+          },
+          {
+            label: 'Reels',
+            value: reels.length.toLocaleString(),
+            icon: Film,
+            tab: 'reels' as AdminTab,
+          },
+          {
+            label: 'Pending Reports',
+            value: pendingReportsCount.toLocaleString(),
+            icon: Flag,
+            tab: 'moderation' as AdminTab,
+            highlight: pendingReportsCount > 0,
+          },
+          {
+            label: 'New Inbox',
+            value: newFeedbackCount.toLocaleString(),
+            icon: Mail,
+            tab: 'feedback' as AdminTab,
+            highlight: newFeedbackCount > 0,
+          },
+        ].map((kpi) => {
+          const KpiIcon = kpi.icon;
+          return (
+            <button
+              key={kpi.label}
+              type="button"
+              onClick={() => setActiveAdminTab(kpi.tab)}
+              className={`p-3.5 rounded-2xl glass-panel text-left transition hover:border-blue-300 ${
+                kpi.highlight ? 'border-blue-300 bg-blue-50/40' : ''
+              }`}
+            >
+              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500">
+                <span>{kpi.label}</span>
+                <KpiIcon className="w-3.5 h-3.5 text-blue-600" />
+              </div>
+              <div className="font-display text-xl font-black text-slate-950 font-mono tabular-nums mt-1">
+                {kpi.value}
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       {/* Admin Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto">
+      <div className="flex items-center gap-1.5 border-b border-slate-200 pb-3 overflow-x-auto no-scrollbar">
         {(
           [
             { id: 'resources', label: `Resources (${resources.length})`, icon: Download },
             { id: 'projects', label: `Projects (${projects.length})`, icon: FolderGit2 },
+            { id: 'reels', label: `Reels (${reels.length})`, icon: Film },
+            { id: 'chat', label: 'Live Chat', icon: MessageSquare },
             { id: 'announcements', label: `Updates (${announcements.length})`, icon: Bell },
             { id: 'categories', label: `Categories (${categories.length})`, icon: Tag },
             { id: 'reviews', label: `Reviews (${allReviews.length})`, icon: Star },
             {
               id: 'moderation',
-              label: `Moderation (${discussions.length}${pendingReportsCount ? ` · ${pendingReportsCount} reports` : ''})`,
+              label: `Moderation (${discussions.length}${pendingReportsCount ? ` · ${pendingReportsCount}` : ''})`,
               icon: Flag,
             },
             {
               id: 'feedback',
-              label: `Feedback (${feedbackList.length}${newFeedbackCount ? ` · ${newFeedbackCount} new` : ''})`,
+              label: `Inbox (${feedbackList.length}${newFeedbackCount ? ` · ${newFeedbackCount}` : ''})`,
               icon: Mail,
             },
             { id: 'users', label: `Users (${usersList.length})`, icon: Users },
@@ -708,7 +897,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               onClick={() => setActiveAdminTab(tab.id)}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
                 active
-                  ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-sm'
+                  ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-950 hover:bg-white border border-transparent hover:border-slate-200'
               }`}
             >
@@ -722,20 +911,32 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       {/* TAB 1: RESOURCES */}
       {activeAdminTab === 'resources' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h2 className="font-display text-lg font-bold text-slate-950">
               Resource Catalogue &amp; Uploads
             </h2>
-            <button
-              onClick={() => {
-                if (isAddingResource) resetResourceForm();
-                else setIsAddingResource(true);
-              }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-extrabold text-xs shadow-sm transition"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{isAddingResource ? 'Close Form' : 'Publish Resource'}</span>
-            </button>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={resourceSearch}
+                  onChange={(e) => setResourceSearch(e.target.value)}
+                  placeholder="Filter resources..."
+                  className="pl-8 pr-3 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <button
+                onClick={() => {
+                  if (isAddingResource) resetResourceForm();
+                  else setIsAddingResource(true);
+                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{isAddingResource ? 'Close Form' : 'Publish Resource'}</span>
+              </button>
+            </div>
           </div>
 
           {isAddingResource && (
@@ -967,7 +1168,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
-                    {resources.map((r) => (
+                    {filteredAdminResources.map((r) => (
                       <tr key={r.id} className="hover:bg-slate-50/70 transition">
                         <td className="p-4 flex items-center gap-3">
                           {r.thumbnailUrl ? (
@@ -1035,7 +1236,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 if (isAddingProject) resetProjectForm();
                 else setIsAddingProject(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-extrabold text-xs shadow-sm transition"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition"
             >
               <Plus className="w-4 h-4" />
               <span>{isAddingProject ? 'Close Form' : 'Add Project'}</span>
@@ -1263,6 +1464,192 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
         </div>
       )}
 
+      {/* TAB 2B: REELS MANAGER */}
+      {activeAdminTab === 'reels' && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="font-display text-lg font-bold text-slate-950">
+                Reels &amp; Short Clips Manager ({reels.length})
+              </h2>
+              <p className="text-xs text-slate-500">
+                Monitor views, engagement, and remove inappropriate video reels.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={reelSearch}
+                  onChange={(e) => setReelSearch(e.target.value)}
+                  placeholder="Search reels or creators..."
+                  className="pl-8 pr-3 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setCurrentTab('reels')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Open Reels Studio</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+            {['All', 'Showcase', 'Minecraft', 'Android', 'Devlog', 'Tutorial'].map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setReelCatFilter(cat)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                  reelCatFilter === cat
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-white text-slate-600 hover:text-slate-950 border border-slate-200'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {filteredAdminReels.length === 0 ? (
+            <div className="p-10 text-center rounded-2xl glass-panel text-xs text-slate-500">
+              No reels match your current filter.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {filteredAdminReels.map((reel) => (
+                <div
+                  key={reel.id}
+                  className="p-4 rounded-2xl glass-panel flex items-center justify-between gap-4"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-12 h-14 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
+                      {reel.thumbnailUrl ? (
+                        <img src={reel.thumbnailUrl} alt={reel.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <Film className="w-5 h-5 text-blue-600" />
+                      )}
+                    </div>
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold uppercase text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
+                          {reel.category}
+                        </span>
+                        <span className="text-xs font-bold text-slate-950 truncate">{reel.title}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 truncate">
+                        By {reel.authorName} · {reel.likesCount || 0} likes · {reel.commentsCount || 0} replies · {reel.viewsCount || 0} views
+                      </p>
+                    </div>
+                  </div>
+
+                  {renderDeleteButton(`admin-reel-${reel.id}`, async () => {
+                    await deleteReel(reel.id);
+                    showToast('Reel deleted.', 'info');
+                  })}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 2C: LIVE CHAT CHANNEL MODERATION */}
+      {activeAdminTab === 'chat' && (
+        <div className="space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="font-display text-lg font-bold text-slate-950">
+                Live Chat Channel Moderation
+              </h2>
+              <p className="text-xs text-slate-500">
+                Inspect messages across public channels in real time and remove spam instantly.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCurrentTab('chat')}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition self-start sm:self-auto"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Open Live Chat</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            {(
+              [
+                { id: 'general', label: 'general-lounge' },
+                { id: 'minecraft-dev', label: 'minecraft-dev' },
+                { id: 'android-hub', label: 'android-hub' },
+                { id: 'help-desk', label: 'help-desk' },
+              ] as const
+            ).map((ch) => (
+              <button
+                key={ch.id}
+                type="button"
+                onClick={() => setAdminChatChannel(ch.id)}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                  adminChatChannel === ch.id
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-white text-slate-600 hover:text-slate-950 border border-slate-200'
+                }`}
+              >
+                <Hash className="w-3.5 h-3.5" />
+                <span>{ch.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="rounded-2xl glass-panel overflow-hidden">
+            {adminChatMessages.length === 0 ? (
+              <div className="p-10 text-center text-xs text-slate-500">
+                No messages in #{adminChatChannel} yet.
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-200 max-h-[460px] overflow-y-auto">
+                {adminChatMessages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className="p-4 flex items-start justify-between gap-4 hover:bg-slate-50/70 transition"
+                  >
+                    <div className="flex items-start gap-3 min-w-0">
+                      <UserAvatar
+                        src={msg.senderAvatar}
+                        name={msg.senderName}
+                        sizeClass="w-8 h-8 text-xs"
+                        className="rounded-lg shrink-0"
+                      />
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-bold text-slate-950">{msg.senderName}</span>
+                          <RoleBadge role={msg.senderRole} size="xs" />
+                          <span className="text-[10px] font-mono text-slate-400">
+                            {new Date(msg.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-700 break-words whitespace-pre-wrap">
+                          {msg.content}
+                        </p>
+                      </div>
+                    </div>
+
+                    {renderDeleteButton(`chat-${msg.id}`, async () => {
+                      await deleteChannelMessage(adminChatChannel, msg.id);
+                      showToast('Chat message removed.', 'info');
+                    })}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* TAB 3: ANNOUNCEMENTS */}
       {activeAdminTab === 'announcements' && (
         <div className="space-y-6">
@@ -1273,7 +1660,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 if (isAddingAnnouncement) resetAnnouncementForm();
                 else setIsAddingAnnouncement(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-extrabold text-xs shadow-sm transition"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition"
             >
               <Plus className="w-4 h-4" />
               <span>{isAddingAnnouncement ? 'Close Form' : 'New Announcement'}</span>
@@ -1539,13 +1926,20 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                   key={val}
                   type="button"
                   onClick={() => setReviewStarFilter(val)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition whitespace-nowrap ${
+                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition whitespace-nowrap ${
                     reviewStarFilter === val
-                      ? 'bg-orange-500 text-white shadow-sm'
+                      ? 'bg-blue-600 text-white shadow-sm'
                       : 'bg-white text-slate-600 hover:text-slate-950 border border-slate-200'
                   }`}
                 >
-                  {val === 'all' ? 'All Stars' : `${val}★`}
+                  {val === 'all' ? (
+                    <span>All Stars</span>
+                  ) : (
+                    <>
+                      <span>{val}</span>
+                      <Star className="w-3 h-3 fill-current" />
+                    </>
+                  )}
                 </button>
               ))}
             </div>
@@ -1969,13 +2363,43 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
             <h2 className="font-display text-lg font-bold text-slate-950">
               Registered Users ({usersList.length})
             </h2>
-            <input
-              type="text"
-              value={userSearch}
-              onChange={(e) => setUserSearch(e.target.value)}
-              placeholder="Search by name, email, or role..."
-              className="w-full sm:w-72 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-blue-500"
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  placeholder="Search name, email, or role..."
+                  className="w-full sm:w-64 pl-8 pr-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={exportUsersCsv}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-200 text-slate-700 hover:text-blue-700 text-xs font-bold transition"
+              >
+                <FileDown className="w-3.5 h-3.5" />
+                <span>Export CSV</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+            {['all', 'Creator', 'Moderator', 'Developer', 'VIP', 'Member'].map((roleOpt) => (
+              <button
+                key={roleOpt}
+                type="button"
+                onClick={() => setUserRoleFilter(roleOpt)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                  userRoleFilter === roleOpt
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-white text-slate-600 hover:text-slate-950 border border-slate-200'
+                }`}
+              >
+                {roleOpt === 'all' ? 'All Roles' : roleOpt}
+              </button>
+            ))}
           </div>
 
           <div className="rounded-3xl glass-panel overflow-hidden">
@@ -2029,6 +2453,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                                 >
                                   <option value="Member">Member</option>
                                   <option value="VIP">VIP</option>
+                                  <option value="Developer">Developer</option>
                                   <option value="Moderator">Moderator</option>
                                 </select>
                               </div>
@@ -2093,7 +2518,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                       </div>
                       <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-blue-600 via-pink-500 to-orange-500"
+                          className="h-full rounded-full bg-blue-600"
                           style={{ width: `${Math.max(4, pct)}%` }}
                         />
                       </div>

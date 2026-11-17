@@ -16,6 +16,7 @@ import {
   Trash2,
   Shield,
   MessageSquare,
+  Lock,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Resource, ResourceRating } from '../types';
@@ -91,6 +92,11 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
   const isBookmarked = profile?.bookmarks?.includes(liveResource.id);
 
   const handleDownload = async (isMirror = false) => {
+    if (!user) {
+      showToast('Please sign in to download releases.', 'info');
+      openAuth?.();
+      return;
+    }
     setIsDownloading(true);
 
     try {
@@ -310,10 +316,16 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
             <button
               onClick={() => handleDownload(false)}
               disabled={isDownloading}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-sky-500 to-blue-600 hover:from-blue-700 hover:to-sky-600 text-white text-xs font-bold shadow-md shadow-blue-600/20 transition active:scale-95 disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/20 transition active:scale-95 disabled:opacity-50"
             >
-              <Download className={`w-4 h-4 ${isDownloading ? 'animate-bounce' : ''}`} />
-              <span>{isDownloading ? 'Starting...' : 'Direct Download'}</span>
+              {!user ? (
+                <Lock className="w-4 h-4" />
+              ) : (
+                <Download className={`w-4 h-4 ${isDownloading ? 'animate-bounce' : ''}`} />
+              )}
+              <span>
+                {!user ? 'Sign In to Download' : isDownloading ? 'Starting...' : 'Direct Download'}
+              </span>
             </button>
           </div>
         </div>

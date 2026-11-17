@@ -13,7 +13,6 @@ import { OfflineBanner } from './components/PWAControls';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { MobileBottomNav } from './components/MobileBottomNav';
-import { BrandLogo } from './components/BrandLogo';
 import { DownloadModal } from './components/DownloadModal';
 import { GlobalSearchModal } from './components/GlobalSearchModal';
 import { AuthModal } from './components/AuthModal';
@@ -165,7 +164,7 @@ function readUrlParams() {
 
 function MainApp() {
   const { resources, startOrGetDMThread } = useData();
-  const { user, loading: authLoading, isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const initialParams = readUrlParams();
 
   const [currentTab, setCurrentTabState] = useState<string>(() =>
@@ -376,6 +375,10 @@ function MainApp() {
     targetTitle: string,
     targetType: 'resource' | 'discussion' | 'comment' | 'review' | 'reel' | 'chat' = 'resource'
   ) => {
+    if (!user) {
+      setIsAuthOpen(true);
+      return;
+    }
     setReportState({
       isOpen: true,
       targetId,
@@ -387,37 +390,6 @@ function MainApp() {
   const closeReport = () => {
     setReportState((prev) => ({ ...prev, isOpen: false }));
   };
-
-  if (authLoading) {
-    return (
-      <div className="min-h-[100dvh] bg-[#f8faff] text-slate-900 flex flex-col items-center justify-center gap-4 p-6">
-        <BrandLogo size={58} className="animate-pulse" />
-        <div className="text-center space-y-1">
-          <p className="font-display text-sm font-black tracking-widest text-slate-950">
-            OBSIDIUSS HUB
-          </p>
-          <p className="text-xs text-slate-500">By Bhaskar Yadav</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-[100dvh] bg-[#f8faff] text-slate-900 flex flex-col selection:bg-blue-500/20 selection:text-blue-900">
-        <SignInView
-          isGate
-          onNavigate={navigateTo}
-          onOpenRules={() => setIsRulesOpen(true)}
-        />
-        <OfflineBanner />
-        <CommunityRulesModal
-          isOpen={isRulesOpen}
-          onClose={() => setIsRulesOpen(false)}
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#f8faff] text-slate-900 flex flex-col selection:bg-blue-500/20 selection:text-blue-900">

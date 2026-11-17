@@ -67,10 +67,14 @@ function mapFirebaseAuthError(err: any): { message: string; tip?: string } {
         tip: 'In Firebase Console → Authentication → Sign-in method → Email/Password, enable both Email/Password and Email link (passwordless sign-in).',
       };
     case 'auth/unauthorized-domain':
+    case 'auth/unauthorized-continue-uri': {
+      const host =
+        typeof window !== 'undefined' ? window.location.hostname : 'this domain';
       return {
-        message: 'This domain is not authorized in Firebase Authentication.',
-        tip: 'Add this domain under Firebase Console → Authentication → Settings → Authorized domains.',
+        message: `Domain "${host}" is not allowlisted yet in Firebase Authentication.`,
+        tip: `In Firebase Console (obsidiuss-hub) → Authentication → Settings → Authorized domains, click "Add domain" and enter: ${host} (or use Password / Register in the meantime).`,
       };
+    }
     case 'auth/popup-blocked':
       return {
         message: 'Google Sign-In popup was blocked by your browser.',

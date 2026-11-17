@@ -273,6 +273,11 @@ export const ReelsView: React.FC<ReelsViewProps> = ({
   };
 
   const handleToggleSaveReel = (reelId: string) => {
+    if (!user) {
+      showToast('Sign in to save reels to your collection.', 'info');
+      openAuth();
+      return;
+    }
     const exists = savedReelIds.includes(reelId);
     setSavedReelIds((prev) => (exists ? prev.filter((id) => id !== reelId) : [reelId, ...prev]));
     showToast(exists ? 'Removed from Saved Reels.' : 'Saved to your Reels collection!', 'success');
